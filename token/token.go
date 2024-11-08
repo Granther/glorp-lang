@@ -61,19 +61,19 @@ const (
 type Token struct {
 	Type    TokenType
 	Lex     string
-	Literal *literal.Literal
+	// Literal *literal.Literal
 	Line    int
 }
 
-func NewToken(tokType TokenType, lexeme string, literal *literal.Literal, line int) *Token {
+//func NewToken(tokType TokenType, lexeme string, literal *literal.Literal, line int) *Token {
+func NewToken(tokType TokenType, lex string, line int) *Token {
 	return &Token{
 		Type:    tokType,
 		Lex:     lex,
-		Literal: literal,
 		Line:    line,
 	}
 }
 
 func (t *Token) String() string {
-	return fmt.Sprintf("%d %s %s", t.Type, t.Lex, t.Literal.String())
+	return fmt.Sprintf("%d %s", t.Type, t.Lex)
 }

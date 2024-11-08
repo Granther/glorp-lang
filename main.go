@@ -5,15 +5,18 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"glorp/scanner"
 )
 
 type Glorp struct {
 	HadError bool
+	Scanner  *scanner.Scanner
 }
 
 func NewGlorp() *Glorp {
 	return &Glorp{
 		HadError: false,
+		Scanner: scanner.NewScanner(),
 	}
 }
 
@@ -31,17 +34,21 @@ func (g *Glorp) Start() error {
 
 func (g *Glorp) Runfile(file string) error {
 	ext := filepath.Ext(file)
-	if ext != "glp" {
+	if ext != ".glp" {
 		return fmt.Errorf("glorp file (.glp) is required to run, got %s", ext)
 	}
-	return nil
+	data, err := os.ReadFile(file)
+	if err != nil {
+		return err
+	}
+	return g.Run(string(data))
 }
 
 func (g *Glorp) Repl() error {
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
-		fmt.Println("> ")
+		fmt.Printf("> ")
 		line, err := reader.ReadString('\n')
 		if err != nil {
 			break
@@ -52,8 +59,13 @@ func (g *Glorp) Repl() error {
 	return nil
 }
 
-func (g *Glorp) Run(line string) {
-	
+func (g *Glorp) Run(source string) error {
+	_, err := g.Scanner.Scan(source)
+	if err != nil {
+		return err
+	}
+	// Scan our source file
+	return nil
 }
 
 func main() {
