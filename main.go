@@ -60,9 +60,13 @@ func (g *Glorp) Repl() error {
 }
 
 func (g *Glorp) Run(source string) error {
-	_, err := g.Scanner.Scan(source)
+	tokens, err := g.Scanner.Scan(source)
 	if err != nil {
 		return err
+	}
+
+	for _, tok := range tokens {
+		fmt.Println(tok.Type)
 	}
 	// Scan our source file
 	return nil

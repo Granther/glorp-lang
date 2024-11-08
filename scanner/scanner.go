@@ -3,6 +3,7 @@ package scanner
 import (
 	"fmt"
 	"glorp/token"
+	"strconv"
 )
 
 type Scanner struct {
@@ -52,6 +53,12 @@ func (s *Scanner) tokenize() (token.Token, error) {
 	case '+':
 		fmt.Println("Plus")
 		return s.addToken(token.PLUS), nil
+	case '\n':
+		fmt.Println("Newline")
+		s.Line++
+		return s.addToken(token.END), nil
+	case ' ':
+		fmt.Println("Space")
 	case '=':
 		if s.next('=') {
 			fmt.Println("Double Equals")
@@ -61,9 +68,21 @@ func (s *Scanner) tokenize() (token.Token, error) {
 			return s.addToken(token.EQUAL), nil
 		}
 	default:
-		fmt.Println("Other char")
+		// How do I know if I'm in a number or not?
+		// Is the char numeric?
+		// Is the next char numeric?
+		if s.isDigit() {
+			fmt.Println("number tok")
+			return s.number(), nil
+		}
+		// We are in a tok that does not contain any of the above chars
 		return s.addToken(token.IDENTIFIER), nil
 	}
+
+	// What tokens do we expect to have a paren at the end of
+	// Ident, str, number, bool
+	// If we see a /n or }) after one of those, add END tok
+	return token.Token{}, nil
 }
 
 func (s *Scanner) addToken(tokType token.TokenType) token.Token {
@@ -72,19 +91,48 @@ func (s *Scanner) addToken(tokType token.TokenType) token.Token {
 }
 
 func (s *Scanner) advance() rune {
-	if s.isAtEnd() { return '0' } // Temp idk
+	if s.isAtEnd() {
+		return '0'
+	} // Temp idk
 	// Update cur ptr
 	s.Current++
 	// Return old char, because how would we return i=0
 	return rune(s.Source[s.Current-1])
 }
 
+func (s *Scanner) isDigit() bool {
+	str := string(s.Source[s.Current-1])
+	i, err := strconv.Atoi(str)
+	if err != nil {
+		return false
+	}
+	return i >= 0 && i <= 9
+}
+
+func (s *Scanner) number() token.Token {
+	for s.isDigit() && !s.isAtEnd() {
+		s.advance()
+	}
+	if s.isAtEnd() {
+		return token.Token{}
+	}
+	return s.addToken(token.NUMBER)
+}
+
+// See if next char matches 'val', if so, increment 'Current'
 func (s *Scanner) next(val byte) bool {
 	// How do we know that = isnt the last char in a source?
 	// We have to check 2 ahead
-	if s.Current+1 >= len(s.Source) { return false }
-	if s.Source[s.Current+1] == val { return true } 
-	return false // With range but val isnt the next char
+	if s.isAtEnd() {
+		return false
+	}
+	if s.Source[s.Current] == val {
+		// If we do not increment current, advance will consume character with disregard for chars before it, it will see == and then =(2nd)
+		s.Current++
+		return true
+	}
+	return false
+	// False: With range but val isnt the next char
 }
 
 func (s *Scanner) isAtEnd() bool {
