@@ -66,7 +66,7 @@ func (g *Glorp) Run(source string) error {
 	}
 
 	for _, tok := range tokens {
-		fmt.Println(tok.Type)
+		fmt.Println(tok.String())
 	}
 	// Scan our source file
 	return nil

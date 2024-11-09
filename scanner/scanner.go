@@ -113,9 +113,10 @@ func (s *Scanner) number() token.Token {
 	for s.isDigit() && !s.isAtEnd() {
 		s.advance()
 	}
-	if s.isAtEnd() {
-		return token.Token{}
-	}
+	// if s.isAtEnd() {
+	// 	return token.Token{}
+	// }
+	fmt.Println(string(s.Source[s.Current-1]))
 	return s.addToken(token.NUMBER)
 }
 
