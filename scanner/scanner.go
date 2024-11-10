@@ -73,11 +73,13 @@ func (s *Scanner) tokenize() (token.Token, error) {
 		// How do I know if I'm in a number or not?
 		// Is the char numeric?
 		// Is the next char numeric?
-		if s.isDigit() {
-			fmt.Println("Current c: ", string(c))
-			fmt.Println("number tok")
-			return s.number(), nil
+		if s.isAlphaNumeric(c) {
+			if s.isDigit(c) {
+				fmt.Println("number tok")
+				return s.number(), nil
+			}
 		}
+
 		// We are in a tok that does not contain any of the above chars
 		fmt.Println("Adding ident")
 		return s.addToken(token.IDENTIFIER), nil
@@ -94,6 +96,13 @@ func (s *Scanner) addToken(tokType token.TokenType) token.Token {
 	return *token.NewToken(tokType, lex, s.Line)
 }
 
+func (s *Scanner) peek() rune { // Look at current token
+	if s.isAtEnd() {
+		return 'a'
+	}
+	return rune(s.Source[s.Current])
+}
+
 func (s *Scanner) advance() rune {
 	if s.isAtEnd() {
 		return '0'
@@ -104,23 +113,13 @@ func (s *Scanner) advance() rune {
 	return rune(s.Source[s.Current-1])
 }
 
-func (s *Scanner) isDigit() bool {
-	str := string(s.Source[s.Current-1])
-	i, err := strconv.Atoi(str)
-	if err != nil {
-		return false
-	}
-	return i >= 0 && i <= 9
+func (s *Scanner) isDigit(c rune) bool {
+	return c >= '0' && c <= '9'
 }
 
 func (s *Scanner) number() token.Token {
-	fmt.Println(string(s.Source[s.Current]))
-	for !s.isAtEnd() {
-		if 
-		if !s.isDigit() {
-			break
-		} 
-		fmt.Println("Advance: ", string(s.advance()))
+	for s.isDigit(s.peek()) {
+		s.advance()
 	}
 
 	return s.addToken(token.NUMBER)
