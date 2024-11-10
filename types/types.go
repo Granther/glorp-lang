@@ -5,6 +5,8 @@ import "glorp/token"
 type Interpreter interface {
 	GetGlobals() Environment
 	ExecuteBlock(stmts []Stmt, environment Environment) error
+	GetHadRuntimeError() bool
+	Interpret(stmts []Stmt)
 }
 
 type Environment interface {

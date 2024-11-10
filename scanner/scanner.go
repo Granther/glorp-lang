@@ -2,153 +2,267 @@ package scanner
 
 import (
 	"fmt"
+	"glorp/literal"
 	"glorp/token"
+	glorpError "glorp/error"
 	"strconv"
 )
 
 type Scanner struct {
-	// When does a scanner have an erorr?
-	// Do we ever?
-	// Unknown token, prob ident?
-	Source  string
-	Current int
-	Start   int
-	Line    int
+	Source   string
+	Tokens   []token.Token
+	Start    int // Points to first lexeme being scanner
+	Current  int // Character currently being considered
+	Line     int // The source line that Current is on
+	Keywords map[string]token.TokenType
 }
 
 func NewScanner() *Scanner {
+	keywords := make(map[string]token.TokenType)
+	keywords["and"] = token.AND
+	keywords["class"] = token.CLASS
+	keywords["else"] = token.ELSE
+	keywords["false"] = token.FALSE
+	keywords["for"] = token.FOR
+	keywords["fun"] = token.FUN
+	keywords["if"] = token.IF
+	keywords["nil"] = token.NIL
+	keywords["or"] = token.OR
+	keywords["print"] = token.PRINT
+	keywords["return"] = token.RETURN
+	keywords["super"] = token.SUPER
+	keywords["this"] = token.THIS
+	keywords["true"] = token.TRUE
+	keywords["var"] = token.VAR
+	keywords["while"] = token.WHILE
+
 	return &Scanner{
-		Current: 0,
-		Start:   0,
-		Line:    0,
+		Tokens:   []token.Token{},
+		Start:    0,
+		Current:  0,
+		Line:     1,
+		Keywords: keywords,
 	}
 }
 
-func (s *Scanner) Scan(source string) ([]token.Token, error) {
+func (s *Scanner) ScanTokens(source string) ([]token.Token, error) {
 	s.Source = source
-	var tokens []token.Token
-	// While we are not at the end of the line, meaning current ptr < len(source)
+	// Each iteration we scan a single token
 	for !s.isAtEnd() {
-		// Set start to current
 		s.Start = s.Current
-		tok, err := s.tokenize()
-		if err != nil {
-			return nil, err
-		}
-
-		tokens = append(tokens, tok)
+		s.scanToken()
 	}
 
-	eofTok := token.NewToken(token.EOF, "", s.Line)
-	tokens = append(tokens, *eofTok)
-	return tokens, nil
+	// Appends an EOF token at the end
+	newToken := token.NewToken(token.EOF, "", nil, s.Line)
+	s.Tokens = append(s.Tokens, *newToken)
+
+	return s.Tokens, nil
 }
 
-func (s *Scanner) tokenize() (token.Token, error) {
-	// Look at char, match single char chars first
-	// Then see if the next chars line up with what would be expected
+// If current character being checked is >= len of source
+// If we are parsing beyond the source return true
+func (s *Scanner) isAtEnd() bool {
+	return s.Current >= len(s.Source)-1
+}
+
+func (s *Scanner) scanToken() {
 	c := s.advance()
 
 	switch c {
+	case '(':
+		s.addSimpleToken(token.LEFT_PAREN)
+	case ')':
+		s.addSimpleToken(token.RIGHT_PAREN)
+	case '{':
+		s.addSimpleToken(token.LEFT_BRACE)
+	case '}':
+		s.addSimpleToken(token.RIGHT_BRACE)
+	case ',':
+		s.addSimpleToken(token.COMMA)
+	case '.':
+		s.addSimpleToken(token.DOT)
+	case '-':
+		s.addSimpleToken(token.MINUS)
 	case '+':
-		fmt.Println("Plus")
-		return s.addToken(token.PLUS), nil
-	case '\n':
-		fmt.Println("Newline")
-		s.Line++
-		return s.addToken(token.END), nil
-	case ' ':
-		fmt.Println("Space")
+		s.addSimpleToken(token.PLUS)
 	case ';':
-		fmt.Println("Semicolon")
+		s.addSimpleToken(token.SEMICOLON)
+	case '*':
+		s.addSimpleToken(token.STAR)
 	case '=':
-		if s.next('=') {
-			fmt.Println("Double Equals")
-			return s.addToken(token.EQUAL_EQUAL), nil
+		if s.match('=') {
+			s.addSimpleToken(token.EQUAL_EQUAL)
 		} else {
-			fmt.Println("Assignment Equal")
-			return s.addToken(token.EQUAL), nil
+			s.addSimpleToken(token.EQUAL)
 		}
-	default:
-		// How do I know if I'm in a number or not?
-		// Is the char numeric?
-		// Is the next char numeric?
-		if s.isAlphaNumeric(c) {
-			if s.isDigit(c) {
-				fmt.Println("number tok")
-				return s.number(), nil
+	case '>':
+		if s.match('=') {
+			s.addSimpleToken(token.GREATER_EQUAL)
+		} else {
+			s.addSimpleToken(token.GREATER)
+		}
+	case '<':
+		if s.match('=') {
+			s.addSimpleToken(token.LESS_EQUAL)
+		} else {
+			s.addSimpleToken(token.LESS)
+		}
+	case '!': // Are we looking at a lexeme of ! OR !=
+		if s.match('=') {
+			s.addSimpleToken(token.BANG_EQUAL)
+		} else {
+			s.addSimpleToken(token.BANG)
+		}
+	case '/': // Are we doing division or commenting?
+		if s.match('/') { // If next char is /, is comment, read till the end of the line
+			for s.peek() != '\n' && !s.isAtEnd() {
+				s.advance()
 			}
+		} else { // Otherwise, we are dividing
+			s.addSimpleToken(token.SLASH)
 		}
-
-		// We are in a tok that does not contain any of the above chars
-		fmt.Println("Adding ident")
-		return s.addToken(token.IDENTIFIER), nil
+	case ' ': // We are basically skipping these, no error, no op
+	case '\r':
+	case '\t':
+		// Ignore whitespace
+		break
+	case '\n': // Do nothing but start iterate to the next line
+		s.Line += 1
+	case '"':
+		s.string()
+	default:
+		if s.isDigit(c) {
+			s.number()
+		} else if s.isAlpha(c) {
+			s.identifier()
+		} else {
+			glorpError.ScannerError(s.Line, "Unexpected character")
+		}
 	}
-
-	// What tokens do we expect to have a paren at the end of
-	// Ident, str, number, bool
-	// If we see a /n or }) after one of those, add END tok
-	return token.Token{}, nil
 }
 
-func (s *Scanner) addToken(tokType token.TokenType) token.Token {
-	lex := s.Source[s.Start:s.Current]
-	return *token.NewToken(tokType, lex, s.Line)
-}
-
-func (s *Scanner) peek() rune { // Look at current token
+// Similar to advance but does not consume the character, 'lookahead'
+func (s *Scanner) peek() rune {
 	if s.isAtEnd() {
 		return 'a'
 	}
 	return rune(s.Source[s.Current])
 }
 
+func (s *Scanner) peekNext() rune {
+	fmt.Println(s.Current)
+	// If current + 1 is greater if equal to len of source, if source is 10, and current is 10
+	if s.Current+1 >= len(s.Source) {
+		return '0'
+	}
+	return rune(s.Source[s.Current+1])
+}
+
+func (s *Scanner) string() {
+	for s.peek() != '"' && !s.isAtEnd() { // Keep searching for string closing
+		if s.peek() == '\n' {
+			s.Line += 1
+		}
+		s.advance()
+	}
+
+	if s.isAtEnd() { // If it makes it to the end of line before finding closing "
+		glorpError.ScannerError(s.Line, "Unterminated string")
+		return
+	}
+
+	// s.Current is one less than the closing ", make Current into "
+	s.advance()
+
+	// Cut the begining and closing "'s off
+	val := s.Source[s.Start+1 : s.Current-1]
+	lit := literal.NewLiteral(val)
+	s.addToken(token.STRING, lit)
+}
+
+// Consumes next character of source line and returns it
 func (s *Scanner) advance() rune {
 	if s.isAtEnd() {
 		return '0'
-	} // Temp idk
-	// Update cur ptr
-	s.Current++
-	// Return old char, because how would we return i=0
-	return rune(s.Source[s.Current-1])
+	}
+	// I give you Grant, the dumbest person alive...
+	sub := s.Source[s.Current]
+	s.Current += 1
+	return rune(sub)
+}
+
+func (s *Scanner) addSimpleToken(tokType token.TokenType) {
+	s.addToken(tokType, nil)
+}
+
+func (s *Scanner) addToken(tokType token.TokenType, literal *literal.Literal) {
+	text := fmt.Sprintf("%v", s.Source[s.Start:s.Current])
+	newToken := token.NewToken(tokType, text, literal, s.Line)
+	s.Tokens = append(s.Tokens, *newToken)
+}
+
+func (s *Scanner) match(expected byte) bool {
+	if s.isAtEnd() {
+		return false
+	} // There is no next token, we are at the end
+	if s.Source[s.Current] != expected {
+		return false
+	} // If it is not expected, ie, = after !, return false
+
+	s.Current += 1 // We are done looking at this char only if the next char is what we expected
+	return true    // The passed char is what we expected
 }
 
 func (s *Scanner) isDigit(c rune) bool {
 	return c >= '0' && c <= '9'
 }
 
-func (s *Scanner) number() token.Token {
+func (s *Scanner) number() {
+	// While the characters being explored are part d
 	for s.isDigit(s.peek()) {
+		s.advance() // What if we try to advance but are at the end?
+	}
+
+	// If number ends in ., dont parse .
+	if s.peek() == '.' && s.isDigit(s.peekNext()) {
+		// Consume the '.'
+		s.advance()
+
+		// Then parse the rest, after the dot
+		for s.isDigit(s.peek()) {
+			s.advance()
+		}
+	}
+
+	f64, _ := strconv.ParseFloat(s.Source[s.Start:s.Current], 32)
+	f64Literal := literal.NewLiteral(f64)
+	s.addToken(token.NUMBER, f64Literal)
+}
+
+func (s *Scanner) identifier() {
+	// While next char is alphanumeric, advance
+	for s.isAlphaNumeric(s.peek()) {
 		s.advance()
 	}
 
-	return s.addToken(token.NUMBER)
-}
+	text := s.Source[s.Start:s.Current]
 
-// See if next char matches 'val', if so, increment 'Current'
-func (s *Scanner) next(val byte) bool {
-	// How do we know that = isnt the last char in a source?
-	// We have to check 2 ahead
-	if s.isAtEnd() {
-		return false
+	tokType, ok := s.Keywords[text]
+	if !ok { // If it is not a recognized keyword, label it as ident
+		s.addSimpleToken(token.IDENTIFIER)
+		return
 	}
-	if s.Source[s.Current] == val {
-		// If we do not increment current, advance will consume character with disregard for chars before it, it will see == and then =(2nd)
-		s.Current++
-		return true
-	}
-	return false
-	// False: With range but val isnt the next char
+
+	s.addSimpleToken(tokType)
 }
 
-func (s *Scanner) isAtEnd() bool {
-	return s.Current >= len(s.Source)
+// Check and see if a byte char is alpha numeric
+func (s *Scanner) isAlpha(c rune) bool {
+	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'
 }
 
-// source
-// var x = 10;
-// start = current
-// while in alphanumeric,
-// consume char
-// current++
-//
+// If is alphabetical or number
+func (s *Scanner) isAlphaNumeric(c rune) bool {
+	return s.isAlpha(c) || s.isDigit(c)
+}

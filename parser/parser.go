@@ -35,7 +35,7 @@ import (
 // We syncronize back up with the unexplored par of the program that isnt directly affetced by the error
 // This means we throw away all tokens on that line
 type Parser struct {
-	Tokens  []*token.Token
+	Tokens  []token.Token
 	Current int
 }
 
@@ -45,7 +45,7 @@ func NewParser() *Parser {
 	}
 }
 
-func (p *Parser) Parse(tokens []*token.Token) []types.Stmt {
+func (p *Parser) Parse(tokens []token.Token) []types.Stmt {
 	p.Tokens = tokens
 	statements := []types.Stmt{}
 	for !p.isAtEnd() {
@@ -655,11 +655,11 @@ func (p *Parser) isAtEnd() bool {
 }
 
 func (p *Parser) peek() token.Token { // Returns current token we have yet to consume
-	return *p.Tokens[p.Current]
+	return p.Tokens[p.Current]
 }
 
 func (p *Parser) previous() token.Token {
-	return *p.Tokens[p.Current-1]
+	return p.Tokens[p.Current-1]
 }
 
 func (p *Parser) advance() token.Token { // Returns token that is consumed, s.Current-1

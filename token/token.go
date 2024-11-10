@@ -2,6 +2,7 @@ package token
 
 import (
 	"fmt"
+	"glorp/literal"
 )
 
 type TokenType int
@@ -52,7 +53,6 @@ const (
 	TRUE
 	VAR
 	WHILE
-	END // Set when next chars indicate the end of and expr/statement
 
 	// End of file
 	EOF
@@ -60,20 +60,20 @@ const (
 
 type Token struct {
 	Type    TokenType
-	Lex     string
-	// Literal *literal.Literal
+	Lexeme  string
+	Literal *literal.Literal
 	Line    int
 }
 
-//func NewToken(tokType TokenType, lexeme string, literal *literal.Literal, line int) *Token {
-func NewToken(tokType TokenType, lex string, line int) *Token {
+func NewToken(tokType TokenType, lexeme string, literal *literal.Literal, line int) *Token {
 	return &Token{
 		Type:    tokType,
-		Lex:     lex,
+		Lexeme:  lexeme,
+		Literal: literal,
 		Line:    line,
 	}
 }
 
 func (t *Token) String() string {
-	return fmt.Sprintf("%d %s", t.Type, t.Lex)
+	return fmt.Sprintf("%d %s %s", t.Type, t.Lexeme, t.Literal.String())
 }

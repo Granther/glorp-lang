@@ -1,8 +1,0 @@
-fun fib(n) {
-    if (n <= 1) return "b";
-
-    print "still run";
-    return 2;
-}
-
-print fib(0);

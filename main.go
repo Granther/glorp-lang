@@ -3,20 +3,27 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"glorp/interpreter"
+	"glorp/parser"
+	"glorp/scanner"
+	"glorp/types"
 	"os"
 	"path/filepath"
-	"glorp/scanner"
 )
 
 type Glorp struct {
-	HadError bool
-	Scanner  *scanner.Scanner
+	HadError    bool
+	Scanner     *scanner.Scanner
+	Parser      *parser.Parser
+	Interpreter types.Interpreter
 }
 
 func NewGlorp() *Glorp {
 	return &Glorp{
-		HadError: false,
-		Scanner: scanner.NewScanner(),
+		HadError:    false,
+		Scanner:     scanner.NewScanner(),
+		Parser:      parser.NewParser(),
+		Interpreter: interpreter.NewInterpreter(),
 	}
 }
 
@@ -60,15 +67,28 @@ func (g *Glorp) Repl() error {
 }
 
 func (g *Glorp) Run(source string) error {
-	tokens, err := g.Scanner.Scan(source)
+
+	tokens, err := g.Scanner.ScanTokens(source)
 	if err != nil {
 		return err
 	}
 
-	for _, tok := range tokens {
-		fmt.Println(tok.String())
+	// Parse tokens to expressions
+	statements := g.Parser.Parse(tokens)
+
+	if g.HadError {
+		fmt.Println("Error encountered in Run")
+		return nil
 	}
-	// Scan our source file
+
+	if g.Interpreter.GetHadRuntimeError() {
+		fmt.Println("Runtime Error encountered in Run")
+		return nil
+	}
+
+	// // fmt.Println(ast.NewAstPrinter().Print(expr))
+
+	g.Interpreter.Interpret(statements)
 	return nil
 }
 

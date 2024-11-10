@@ -391,6 +391,10 @@ func (i *Interpreter) GetGlobals() types.Environment {
 	return i.Globals
 }
 
+func  (i *Interpreter) GetHadRuntimeError() bool {
+	return i.HadRuntimeError
+}
+
 // Variable declarations are statements, because we are doing something
 // Now we add a declaration grammar rule to out syntax
 // Allow for declaring var, funcs, classes
