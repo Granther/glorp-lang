@@ -2,10 +2,10 @@ package parser
 
 import (
 	"fmt"
-	"glorp/ast"
+	glorpError "glorp/error"
 	"glorp/literal"
 	"glorp/token"
-	glorpError "glorp/error"
+	"glorp/types"
 )
 
 // Two jobs
@@ -45,9 +45,9 @@ func NewParser() *Parser {
 	}
 }
 
-func (p *Parser) Parse(tokens []*token.Token) []ast.Stmt {
+func (p *Parser) Parse(tokens []*token.Token) []types.Stmt {
 	p.Tokens = tokens
-	statements := []ast.Stmt{}
+	statements := []types.Stmt{}
 	for !p.isAtEnd() {
 		decl, err := p.declaration()
 		if err != nil {
@@ -61,7 +61,7 @@ func (p *Parser) Parse(tokens []*token.Token) []ast.Stmt {
 }
 
 // Called repeatably to parse a series of statments in a program, perfect place to look for panic
-func (p *Parser) declaration() (ast.Stmt, error) {
+func (p *Parser) declaration() (types.Stmt, error) {
 	// If current token is var, we are looking at var decl
 	if p.match(token.VAR) {
 		return p.varDeclaration()
@@ -73,7 +73,7 @@ func (p *Parser) declaration() (ast.Stmt, error) {
 	return p.statement()
 }
 
-func (p *Parser) funDeclaration(kind string) (ast.Stmt, error) {
+func (p *Parser) funDeclaration(kind string) (types.Stmt, error) {
 	name, err := p.consume(token.IDENTIFIER, fmt.Sprintf("Expect %s name.", kind))
 	if err != nil {
 		return nil, err
@@ -119,10 +119,10 @@ func (p *Parser) funDeclaration(kind string) (ast.Stmt, error) {
 		return nil, err
 	}
 
-	return ast.NewFun(name, params, body), nil
+	return types.NewFun(name, params, body), nil
 }
 
-func (p *Parser) varDeclaration() (ast.Stmt, error) {
+func (p *Parser) varDeclaration() (types.Stmt, error) {
 	// Consume name only if the next token is an ident
 	name, err := p.consume(token.IDENTIFIER, "Expect variable name.")
 	if err != nil {
@@ -130,7 +130,7 @@ func (p *Parser) varDeclaration() (ast.Stmt, error) {
 	}
 
 	// Set as nil empty expr
-	var initializer ast.Expr
+	var initializer types.Expr
 	if p.match(token.EQUAL) { // Look at the expression to give to a new var
 		initializer, err = p.expression()
 		if err != nil {
@@ -140,11 +140,11 @@ func (p *Parser) varDeclaration() (ast.Stmt, error) {
 
 	// If = does not exist in decl, is empty decl, pass empty initial to var decl
 	p.consume(token.SEMICOLON, "Expect ';' after variable in declaration.")
-	return ast.NewVar(name, initializer), nil
+	return types.NewVar(name, initializer), nil
 }
 
 // Decide what kind of statement to branch to
-func (p *Parser) statement() (ast.Stmt, error) {
+func (p *Parser) statement() (types.Stmt, error) {
 	if p.match(token.RETURN) {
 		return p.returnStmt()
 	}
@@ -172,14 +172,14 @@ func (p *Parser) statement() (ast.Stmt, error) {
 			return nil, err
 		}
 
-		return ast.NewBlock(block), nil
+		return types.NewBlock(block), nil
 	}
 
 	return p.exprStmt()
 }
 
-func (p *Parser) block() ([]ast.Stmt, error) {
-	var stmts []ast.Stmt
+func (p *Parser) block() ([]types.Stmt, error) {
+	var stmts []types.Stmt
 
 	// While the next tok is not right brace and we are not at the end
 	for !p.check(token.RIGHT_BRACE) && !p.isAtEnd() {
@@ -199,7 +199,7 @@ func (p *Parser) block() ([]ast.Stmt, error) {
 	return stmts, nil
 }
 
-func (p *Parser) forStmt() (ast.Stmt, error) {
+func (p *Parser) forStmt() (types.Stmt, error) {
 	var err error
 	_, err = p.consume(token.LEFT_PAREN, "Expect '(' after 'for'.")
 	if err != nil {
@@ -210,7 +210,7 @@ func (p *Parser) forStmt() (ast.Stmt, error) {
 	// Match advances 'consumes' the next token if matched
 	// Check returns wether the next is it or not simply
 
-	var initializer ast.Stmt
+	var initializer types.Stmt
 	if p.match(token.SEMICOLON) { // Just a semicolon, this is directly following the opening (
 		initializer = nil
 	} else if p.match(token.VAR) { // Init is a new var, x := 1
@@ -223,7 +223,7 @@ func (p *Parser) forStmt() (ast.Stmt, error) {
 		}
 	}
 
-	var condition ast.Expr = nil
+	var condition types.Expr = nil
 	if !p.check(token.SEMICOLON) { // See if next token is not semicolon, dont consume it
 		if condition, err = p.expression(); err != nil {
 			return nil, err // If not, parse expression, not matter what ';' should be at end
@@ -236,7 +236,7 @@ func (p *Parser) forStmt() (ast.Stmt, error) {
 	}
 
 	// Same here but we expect a closing paren instead
-	var increment ast.Expr = nil
+	var increment types.Expr = nil
 	if !p.check(token.RIGHT_PAREN) {
 		if increment, err = p.expression(); err != nil {
 			return nil, err
@@ -247,27 +247,27 @@ func (p *Parser) forStmt() (ast.Stmt, error) {
 		return nil, err
 	}
 
-	var body ast.Stmt = nil
+	var body types.Stmt = nil
 	if body, err = p.statement(); err != nil {
 		return nil, err
 	}
 	if increment != nil {
-		body = ast.NewBlock([]ast.Stmt{body, ast.NewExpression(increment)})
+		body = types.NewBlock([]types.Stmt{body, types.NewExpression(increment)})
 	}
 	if condition == nil {
-		condition = ast.NewLiteralExpr(literal.NewLiteral(true))
+		condition = types.NewLiteralExpr(literal.NewLiteral(true))
 	}
-	body = ast.NewWhile(condition, body)
+	body = types.NewWhile(condition, body)
 	if initializer != nil {
-		body = ast.NewBlock([]ast.Stmt{initializer, body})
+		body = types.NewBlock([]types.Stmt{initializer, body})
 	}
 
 	return body, nil
 }
 
-func (p *Parser) returnStmt() (ast.Stmt, error) {
+func (p *Parser) returnStmt() (types.Stmt, error) {
 	keyword := p.previous()
-	var val ast.Expr = nil
+	var val types.Expr = nil
 	if !p.check(token.SEMICOLON) { // As long as ; is not the next token, cause a ; cant start an expression
 		expr, err := p.expression()
 		if err != nil {
@@ -279,10 +279,10 @@ func (p *Parser) returnStmt() (ast.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	return ast.NewReturn(keyword, val), nil
+	return types.NewReturn(keyword, val), nil
 }
 
-func (p *Parser) whileStmt() (ast.Stmt, error) {
+func (p *Parser) whileStmt() (types.Stmt, error) {
 	_, err := p.consume(token.LEFT_PAREN, "Expect '(' after 'while'.")
 	if err != nil {
 		return nil, err
@@ -303,10 +303,10 @@ func (p *Parser) whileStmt() (ast.Stmt, error) {
 		return nil, err
 	}
 
-	return ast.NewWhile(condition, body), nil
+	return types.NewWhile(condition, body), nil
 }
 
-func (p *Parser) ifStmt() (ast.Stmt, error) {
+func (p *Parser) ifStmt() (types.Stmt, error) {
 	_, err := p.consume(token.LEFT_PAREN, "Expect '(' after 'if'.")
 	if err != nil {
 		return nil, err
@@ -327,39 +327,39 @@ func (p *Parser) ifStmt() (ast.Stmt, error) {
 		return nil, err
 	}
 
-	var finalBranch ast.Stmt
+	var finalBranch types.Stmt
 
 	if p.match(token.ELSE) {
 		finalBranch, err = p.statement()
 	}
 
-	return ast.NewIf(condition, thenBranch, finalBranch), nil
+	return types.NewIf(condition, thenBranch, finalBranch), nil
 }
 
-func (p *Parser) printStmt() (ast.Stmt, error) {
+func (p *Parser) printStmt() (types.Stmt, error) {
 	val, err := p.expression()
 	if err != nil {
 		return nil, err
 	}
 	p.consume(token.SEMICOLON, "Expect ';' after value.")
-	return ast.NewPrint(val), nil
+	return types.NewPrint(val), nil
 }
 
-func (p *Parser) exprStmt() (ast.Stmt, error) {
+func (p *Parser) exprStmt() (types.Stmt, error) {
 	val, err := p.expression()
 	if err != nil {
 		return nil, err
 	}
 	p.consume(token.SEMICOLON, "Expect ';' after value.")
-	return ast.NewExpression(val), nil
+	return types.NewExpression(val), nil
 }
 
-func (p *Parser) expression() (ast.Expr, error) {
+func (p *Parser) expression() (types.Expr, error) {
 	return p.assignment()
 }
 
-func (p *Parser) assignment() (ast.Expr, error) {
-	var val ast.Expr
+func (p *Parser) assignment() (types.Expr, error) {
+	var val types.Expr
 
 	expr, err := p.or()
 	if err != nil {
@@ -373,16 +373,16 @@ func (p *Parser) assignment() (ast.Expr, error) {
 		}
 
 		// If expr is a var
-		if varExpr, ok := expr.(*ast.VarExpr); ok {
+		if varExpr, ok := expr.(*types.VarExpr); ok {
 			name := varExpr.Name
-			return ast.NewAssignExpr(name, val), nil
+			return types.NewAssignExpr(name, val), nil
 		}
 	}
 
 	return expr, nil
 }
 
-func (p *Parser) or() (ast.Expr, error) {
+func (p *Parser) or() (types.Expr, error) {
 	expr, err := p.and()
 	if err != nil {
 		return nil, err
@@ -394,14 +394,14 @@ func (p *Parser) or() (ast.Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		expr = ast.NewLogicalExpr(expr, operator, right)
+		expr = types.NewLogicalExpr(expr, operator, right)
 	}
 	return expr, nil
 }
 
-func (p *Parser) and() (ast.Expr, error) {
+func (p *Parser) and() (types.Expr, error) {
 	var err error
-	var expr ast.Expr
+	var expr types.Expr
 
 	if expr, err = p.equality(); err != nil {
 		return nil, err
@@ -413,7 +413,7 @@ func (p *Parser) and() (ast.Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		expr = ast.NewLogicalExpr(expr, operator, right)
+		expr = types.NewLogicalExpr(expr, operator, right)
 	}
 	return expr, nil
 }
@@ -421,7 +421,7 @@ func (p *Parser) and() (ast.Expr, error) {
 // If we are parsing a == b == c
 // We parse a == b, then a == b becomes the left operand of == c, looping
 // Returning the entire expression at the end
-func (p *Parser) equality() (ast.Expr, error) {
+func (p *Parser) equality() (types.Expr, error) {
 	expr, err := p.comparison()
 	if err != nil {
 		return nil, err
@@ -432,13 +432,13 @@ func (p *Parser) equality() (ast.Expr, error) {
 		fmt.Println("Equality prev lexeme: ", operator.Lexeme)
 
 		right, _ := p.comparison()
-		expr = ast.NewBinaryExpr(expr, operator, right)
+		expr = types.NewBinaryExpr(expr, operator, right)
 	}
 
 	return expr, nil
 }
 
-func (p *Parser) comparison() (ast.Expr, error) {
+func (p *Parser) comparison() (types.Expr, error) {
 	expr, err := p.term()
 	if err != nil {
 		return nil, err
@@ -448,13 +448,13 @@ func (p *Parser) comparison() (ast.Expr, error) {
 	for p.match(token.GREATER, token.GREATER_EQUAL, token.LESS, token.LESS_EQUAL) {
 		operator := p.previous()
 		right, _ := p.term()
-		expr = ast.NewBinaryExpr(expr, operator, right)
+		expr = types.NewBinaryExpr(expr, operator, right)
 	}
 
 	return expr, nil
 }
 
-func (p *Parser) term() (ast.Expr, error) {
+func (p *Parser) term() (types.Expr, error) {
 	expr, err := p.factor()
 	if err != nil {
 		return nil, err
@@ -466,13 +466,13 @@ func (p *Parser) term() (ast.Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		expr = ast.NewBinaryExpr(expr, operator, right)
+		expr = types.NewBinaryExpr(expr, operator, right)
 	}
 
 	return expr, nil
 }
 
-func (p *Parser) factor() (ast.Expr, error) {
+func (p *Parser) factor() (types.Expr, error) {
 	expr, err := p.unary()
 	if err != nil {
 		return nil, err
@@ -484,28 +484,28 @@ func (p *Parser) factor() (ast.Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		expr = ast.NewBinaryExpr(expr, operator, right)
+		expr = types.NewBinaryExpr(expr, operator, right)
 	}
 
 	return expr, nil
 }
 
-func (p *Parser) unary() (ast.Expr, error) {
+func (p *Parser) unary() (types.Expr, error) {
 	if p.match(token.BANG, token.MINUS) { // If it is ! or -, must be unary
 		operator := p.previous()
 		right, err := p.unary() // Parse recursively, ie, !!
 		if err != nil {
 			return nil, err
 		}
-		return ast.NewUnaryExpr(operator, right), nil
+		return types.NewUnaryExpr(operator, right), nil
 	}
 
 	return p.call()
 	// Must have reached highest level precedence
 }
 
-func (p *Parser) call() (ast.Expr, error) {
-	var expr ast.Expr
+func (p *Parser) call() (types.Expr, error) {
+	var expr types.Expr
 	var err error
 	if expr, err = p.primary(); err != nil {
 		return nil, err
@@ -525,8 +525,8 @@ func (p *Parser) call() (ast.Expr, error) {
 	return expr, nil
 }
 
-func (p *Parser) finishCall(callee ast.Expr) (ast.Expr, error) {
-	var args []ast.Expr
+func (p *Parser) finishCall(callee types.Expr) (types.Expr, error) {
+	var args []types.Expr
 
 	if !p.check(token.RIGHT_PAREN) { // If we dont see right paren as we are walking the args
 		for {
@@ -552,29 +552,29 @@ func (p *Parser) finishCall(callee ast.Expr) (ast.Expr, error) {
 	}
 
 	// Finally perform func call
-	return ast.NewCallExpr(callee, paren, args), nil
+	return types.NewCallExpr(callee, paren, args), nil
 }
 
-func (p *Parser) primary() (ast.Expr, error) {
+func (p *Parser) primary() (types.Expr, error) {
 	if p.match(token.FALSE) {
-		return ast.NewLiteralExpr(literal.NewLiteral(false)), nil
+		return types.NewLiteralExpr(literal.NewLiteral(false)), nil
 	}
 
 	if p.match(token.TRUE) {
-		return ast.NewLiteralExpr(literal.NewLiteral(true)), nil
+		return types.NewLiteralExpr(literal.NewLiteral(true)), nil
 	}
 
 	if p.match(token.NIL) {
-		return ast.NewLiteralExpr(literal.NewLiteral(nil)), nil
+		return types.NewLiteralExpr(literal.NewLiteral(nil)), nil
 	}
 
 	if p.match(token.NUMBER, token.STRING) {
-		return ast.NewLiteralExpr(p.previous().Literal), nil
+		return types.NewLiteralExpr(p.previous().Literal), nil
 	}
 
 	// If we see an ident
 	if p.match(token.IDENTIFIER) {
-		return ast.NewVarExpr(p.previous()), nil
+		return types.NewVarExpr(p.previous()), nil
 	}
 
 	if p.match(token.LEFT_PAREN) {
@@ -583,7 +583,7 @@ func (p *Parser) primary() (ast.Expr, error) {
 			return nil, err
 		}
 		p.consume(token.RIGHT_PAREN, "Expect ')' after expression.")
-		return ast.NewGroupingExpr(expr), nil
+		return types.NewGroupingExpr(expr), nil
 	}
 
 	// If we have gotten here, the token given cannot start an expression

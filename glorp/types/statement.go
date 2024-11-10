@@ -1,12 +1,8 @@
-package ast
+package types
 
 import (
 	"glorp/token"
 )
-
-type Stmt interface {
-	Accept(visitor StmtVisitor) error
-}
 
 type Expression struct {
 	Expr Expr

@@ -1,4 +1,4 @@
-package main
+package error
 
 type ReturnErr struct {
 	Val any

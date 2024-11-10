@@ -3,14 +3,15 @@ package environment
 import (
 	"fmt"
 	"glorp/token"
+	"glorp/types"
 )
 
 type Environment struct {
-	Enlcosing *Environment
+	Enlcosing types.Environment
 	Values    map[string]any
 }
 
-func NewEnvironment(enclosing *Environment) *Environment {
+func NewEnvironment(enclosing types.Environment) *Environment {
 	return &Environment{
 		Enlcosing: enclosing,
 		Values:    make(map[string]any),
@@ -25,7 +26,9 @@ func (e *Environment) Get(name token.Token) (any, error) {
 	}
 
 	// Start a recursive chain to call up to higher envs, looking for the var
-	if e.Enlcosing != nil { return e.Enlcosing.Get(name) }
+	if e.Enlcosing != nil {
+		return e.Enlcosing.Get(name)
+	}
 
 	return nil, fmt.Errorf("undefined variable %s", name.Lexeme)
 }

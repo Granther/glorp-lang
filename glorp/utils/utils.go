@@ -2,7 +2,7 @@ package utils
 
 import (
 	"fmt"
-	"glorp/ast"
+	"glorp/types"
 	"strings"
 )
 
@@ -18,7 +18,7 @@ func ConvFloat(a, b any) (float64, float64, bool) {
 	}
 }
 
-func Parenthesize(visitor ast.Visitor, name string, exprs ...ast.Expr) (string, error) {
+func Parenthesize(visitor types.Visitor, name string, exprs ...types.Expr) (string, error) {
 	var builder strings.Builder
 
 	builder.WriteString("(")

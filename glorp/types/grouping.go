@@ -1,4 +1,4 @@
-package ast
+package types
 
 type GroupingExpr struct {
 	Expr Expr

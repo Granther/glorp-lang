@@ -2,11 +2,12 @@ package interpreter
 
 import (
 	"fmt"
-	"glorp/ast"
 	"glorp/environment"
-	"glorp/token"
-	"glorp/utils"
 	glorpError "glorp/error"
+	"glorp/native"
+	"glorp/token"
+	"glorp/types"
+	"glorp/utils"
 	"reflect"
 )
 
@@ -26,13 +27,13 @@ import (
 
 type Interpreter struct {
 	HadRuntimeError bool
-	Globals         *environment.Environment
-	Environment     *environment.Environment
+	Globals         types.Environment
+	Environment     types.Environment
 }
 
-func NewInterpreter() *Interpreter {
+func NewInterpreter() types.Interpreter {
 	globals := environment.NewEnvironment(nil)
-	globals.Define("clock", NewClockCallable())
+	globals.Define("clock", native.NewClockCallable())
 	return &Interpreter{
 		// Pass nil because we want this to point to the global scope
 		Globals:         globals,
@@ -41,7 +42,7 @@ func NewInterpreter() *Interpreter {
 	}
 }
 
-func (i *Interpreter) VisitBinaryExpr(expr *ast.BinaryExpr) (any, error) {
+func (i *Interpreter) VisitBinaryExpr(expr *types.BinaryExpr) (any, error) {
 	left, err := i.evaluate(expr.Left)
 	if err != nil {
 		return nil, err
@@ -111,7 +112,7 @@ func (i *Interpreter) VisitBinaryExpr(expr *ast.BinaryExpr) (any, error) {
 	return utils.Parenthesize(i, expr.Operator.Lexeme, expr.Left, expr.Right)
 }
 
-func (i *Interpreter) VisitUnaryExpr(expr *ast.UnaryExpr) (any, error) {
+func (i *Interpreter) VisitUnaryExpr(expr *types.UnaryExpr) (any, error) {
 	right, err := i.evaluate(expr.Right)
 	if err != nil {
 		return nil, err
@@ -131,23 +132,23 @@ func (i *Interpreter) VisitUnaryExpr(expr *ast.UnaryExpr) (any, error) {
 }
 
 // Recursively looks through layered parens
-func (i *Interpreter) VisitGroupingExpr(expr *ast.GroupingExpr) (any, error) {
+func (i *Interpreter) VisitGroupingExpr(expr *types.GroupingExpr) (any, error) {
 	return i.evaluate(expr.Expr)
 }
 
-func (i *Interpreter) VisitLiteralExpr(expr *ast.LiteralExpr) (any, error) {
+func (i *Interpreter) VisitLiteralExpr(expr *types.LiteralExpr) (any, error) {
 	return expr.Val.Val, nil
 }
 
-func (i *Interpreter) VisitWhileExpr(expr *ast.WhileExpr) (any, error) {
+func (i *Interpreter) VisitWhileExpr(expr *types.WhileExpr) (any, error) {
 	return nil, nil
 }
 
-func (i *Interpreter) VisitReturnExpr(expr *ast.ReturnExpr) (any, error) {
+func (i *Interpreter) VisitReturnExpr(expr *types.ReturnExpr) (any, error) {
 	return nil, nil
 }
 
-func (i *Interpreter) VisitCallExpr(expr *ast.CallExpr) (any, error) {
+func (i *Interpreter) VisitCallExpr(expr *types.CallExpr) (any, error) {
 	callee, err := i.evaluate(expr.Callee)
 	if err != nil {
 		return nil, err
@@ -162,7 +163,7 @@ func (i *Interpreter) VisitCallExpr(expr *ast.CallExpr) (any, error) {
 		args = append(args, val)
 	}
 
-	fun, ok := callee.(Callable)
+	fun, ok := callee.(native.Callable)
 	if !ok {
 		glorpError.InterpreterRuntimeError(expr.Paren, fmt.Sprintf("Expected identifier, got type %T", fun))
 	}
@@ -175,30 +176,30 @@ func (i *Interpreter) VisitCallExpr(expr *ast.CallExpr) (any, error) {
 	return fun.Call(i, args)
 }
 
-func (i *Interpreter) VisitExprStmt(stmt *ast.Expression) error {
+func (i *Interpreter) VisitExprStmt(stmt *types.Expression) error {
 	i.evaluate(stmt.Expr)
 	return nil
 }
 
-func (i *Interpreter) VisitReturnStmt(stmt *ast.Return) error {
+func (i *Interpreter) VisitReturnStmt(stmt *types.Return) error {
 	fmt.Println("Visist return")
 	if stmt.Val != nil {
 		v, err := i.evaluate(stmt.Val)
 		if err != nil {
 			return err
 		}
-		return NewReturnErr(v)
+		return glorpError.NewReturnErr(v)
 	}
 	return nil // No return val
 }
 
-func (i *Interpreter) VisitPrintStmt(stmt *ast.Print) error {
+func (i *Interpreter) VisitPrintStmt(stmt *types.Print) error {
 	val, _ := i.evaluate(stmt.Expr)
 	fmt.Println(utils.Stringify(val))
 	return nil
 }
 
-func (i *Interpreter) VisitVarStmt(stmt *ast.Var) error {
+func (i *Interpreter) VisitVarStmt(stmt *types.Var) error {
 	var val any
 	var err error
 	if stmt.Initializer != nil { // If variable has initializer " = 10"
@@ -214,18 +215,18 @@ func (i *Interpreter) VisitVarStmt(stmt *ast.Var) error {
 	return nil
 }
 
-func (i *Interpreter) VisitFunStmt(stmt *ast.Fun) error {
+func (i *Interpreter) VisitFunStmt(stmt *types.Fun) error {
 	// Take fun syntax node
-	function := NewGloxFunction(*stmt)
+	function := native.NewGlorpFunction(*stmt)
 	i.Environment.Define(stmt.Name.Lexeme, function) // Add function to global environment by name, can be used anywhere now
 	return nil
 }
 
-func (i *Interpreter) VisitBlockStmt(stmt *ast.Block) error {
-	return i.executeBlock(stmt.Statements, environment.NewEnvironment(i.Environment))
+func (i *Interpreter) VisitBlockStmt(stmt *types.Block) error {
+	return i.ExecuteBlock(stmt.Statements, environment.NewEnvironment(i.Environment))
 }
 
-func (i *Interpreter) VisitWhileStmt(stmt *ast.While) error {
+func (i *Interpreter) VisitWhileStmt(stmt *types.While) error {
 	for {
 		val, err := i.evaluate(stmt.Condition)
 		if err != nil {
@@ -245,7 +246,7 @@ func (i *Interpreter) VisitWhileStmt(stmt *ast.While) error {
 	return nil
 }
 
-func (i *Interpreter) VisitIfStmt(stmt *ast.If) error {
+func (i *Interpreter) VisitIfStmt(stmt *types.If) error {
 	val, err := i.evaluate(stmt.Condition)
 	if err != nil {
 		return err
@@ -263,7 +264,7 @@ func (i *Interpreter) VisitIfStmt(stmt *ast.If) error {
 	return nil
 }
 
-func (i *Interpreter) executeBlock(stmts []ast.Stmt, environment *environment.Environment) error {
+func (i *Interpreter) ExecuteBlock(stmts []types.Stmt, environment types.Environment) error {
 	prev := i.Environment // Save old, for setting back later
 
 	// Change to new block and execute from that env
@@ -284,7 +285,7 @@ func (i *Interpreter) executeBlock(stmts []ast.Stmt, environment *environment.En
 	return nil
 }
 
-func (i *Interpreter) VisitAssignExpr(expr *ast.AssignExpr) (any, error) {
+func (i *Interpreter) VisitAssignExpr(expr *types.AssignExpr) (any, error) {
 	val, err := i.evaluate(expr.Val)
 	if err != nil {
 		return nil, err
@@ -293,15 +294,15 @@ func (i *Interpreter) VisitAssignExpr(expr *ast.AssignExpr) (any, error) {
 	return val, nil
 }
 
-func (i *Interpreter) VisitVarExpr(expr *ast.VarExpr) (any, error) {
+func (i *Interpreter) VisitVarExpr(expr *types.VarExpr) (any, error) {
 	return i.Environment.Get(expr.Name)
 }
 
-func (i *Interpreter) VisitFunExpr(expr *ast.FunExpr) (any, error) {
+func (i *Interpreter) VisitFunExpr(expr *types.FunExpr) (any, error) {
 	return i.Environment.Get(expr.Name)
 }
 
-func (i *Interpreter) VisitLogicalExpr(expr *ast.LogicalExpr) (any, error) {
+func (i *Interpreter) VisitLogicalExpr(expr *types.LogicalExpr) (any, error) {
 	left, err := i.evaluate(expr.Left)
 	if err != nil {
 		return nil, err
@@ -325,7 +326,7 @@ func (i *Interpreter) VisitLogicalExpr(expr *ast.LogicalExpr) (any, error) {
 	return i.evaluate(expr.Right)
 }
 
-func (i *Interpreter) Print(expr ast.Expr) string {
+func (i *Interpreter) Print(expr types.Expr) string {
 	val, err := expr.Accept(i)
 	if err != nil {
 	}
@@ -333,7 +334,7 @@ func (i *Interpreter) Print(expr ast.Expr) string {
 }
 
 // Calls the visit method for whatever dtype it is
-func (i *Interpreter) evaluate(expr ast.Expr) (any, error) {
+func (i *Interpreter) evaluate(expr types.Expr) (any, error) {
 	return expr.Accept(i)
 }
 
@@ -372,7 +373,7 @@ func checkNumberOperands(operator token.Token, left any, right any) (float64, fl
 	return l, r, nil
 }
 
-func (i *Interpreter) Interpret(stmts []ast.Stmt) {
+func (i *Interpreter) Interpret(stmts []types.Stmt) {
 	for _, stmt := range stmts {
 		if i.execute(stmt) != nil {
 			fmt.Println("Error in interpret")
@@ -382,8 +383,12 @@ func (i *Interpreter) Interpret(stmts []ast.Stmt) {
 	}
 }
 
-func (i *Interpreter) execute(stmt ast.Stmt) error {
+func (i *Interpreter) execute(stmt types.Stmt) error {
 	return stmt.Accept(i)
+}
+
+func (i *Interpreter) GetGlobals() types.Environment {
+	return i.Globals
 }
 
 // Variable declarations are statements, because we are doing something
@@ -395,7 +400,7 @@ func (i *Interpreter) execute(stmt ast.Stmt) error {
 // Create an entirely new environment inside each scope block
 // We can discard this entire env and not be afraid of deleting global vars of the same name
 // Shadowing
-// When 2 vars (maybe global and local) have the same name. The local var casts a
+// When 2 vars (maybe global and local) have the same name. The local var ctypess a
 // 'shadow' over the global one, hiding it
 // Environment chaining
 // Each environment has link to the env above, all ending in the global scope

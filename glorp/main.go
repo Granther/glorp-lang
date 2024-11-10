@@ -72,7 +72,7 @@ func (g *Glorp) Run(source string) error {
 	}
 
 	// Parse tokens to expressions
-	statements := parser.Parse(tokens)
+	statements := g.Parser.Parse(tokens)
 
 	if g.HadError {
 		fmt.Println("Error encountered in Run")
@@ -87,6 +87,7 @@ func (g *Glorp) Run(source string) error {
 	// fmt.Println(ast.NewAstPrinter().Print(expr))
 
 	g.Interpreter.Interpret(statements)
+	return nil
 }
 
 func main() {
