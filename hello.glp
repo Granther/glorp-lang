@@ -1,1 +1,5 @@
-x == 10;
+fun foo(a, b) {
+    return a + b;
+}
+
+print foo(10, 11);

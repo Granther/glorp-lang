@@ -1,23 +1,27 @@
-package scanner
+package main
 
 import (
 	"fmt"
-	"glorp/literal"
-	"glorp/token"
-	glorpError "glorp/error"
+	"glox/literal"
+	"glox/token"
 	"strconv"
 )
 
-type Scanner struct {
+type Scanner interface {
+	ScanTokens() []*token.Token
+}
+
+type GloxScanner struct {
 	Source   string
-	Tokens   []token.Token
+	Tokens   []*token.Token
 	Start    int // Points to first lexeme being scanner
 	Current  int // Character currently being considered
 	Line     int // The source line that Current is on
+	Lox      *Lox
 	Keywords map[string]token.TokenType
 }
 
-func NewScanner() *Scanner {
+func NewGloxScanner(source string, lox *Lox) Scanner {
 	keywords := make(map[string]token.TokenType)
 	keywords["and"] = token.AND
 	keywords["class"] = token.CLASS
@@ -35,19 +39,19 @@ func NewScanner() *Scanner {
 	keywords["true"] = token.TRUE
 	keywords["var"] = token.VAR
 	keywords["while"] = token.WHILE
-	keywords["glorp"] = token.GLORPMAIN
 
-	return &Scanner{
-		Tokens:   []token.Token{},
+	return &GloxScanner{
+		Source:   source,
+		Tokens:   []*token.Token{},
 		Start:    0,
 		Current:  0,
 		Line:     1,
+		Lox:      lox,
 		Keywords: keywords,
 	}
 }
 
-func (s *Scanner) ScanTokens(source string) ([]token.Token, error) {
-	s.Source = source
+func (s *GloxScanner) ScanTokens() []*token.Token {
 	// Each iteration we scan a single token
 	for !s.isAtEnd() {
 		s.Start = s.Current
@@ -56,18 +60,18 @@ func (s *Scanner) ScanTokens(source string) ([]token.Token, error) {
 
 	// Appends an EOF token at the end
 	newToken := token.NewToken(token.EOF, "", nil, s.Line)
-	s.Tokens = append(s.Tokens, *newToken)
+	s.Tokens = append(s.Tokens, newToken)
 
-	return s.Tokens, nil
+	return s.Tokens
 }
 
 // If current character being checked is >= len of source
 // If we are parsing beyond the source return true
-func (s *Scanner) isAtEnd() bool {
+func (s *GloxScanner) isAtEnd() bool {
 	return s.Current >= len(s.Source)-1
 }
 
-func (s *Scanner) scanToken() {
+func (s *GloxScanner) scanToken() {
 	c := s.advance()
 
 	switch c {
@@ -88,7 +92,7 @@ func (s *Scanner) scanToken() {
 	case '+':
 		s.addSimpleToken(token.PLUS)
 	case ';':
-		s.addSimpleToken(token.END)
+		s.addSimpleToken(token.SEMICOLON)
 	case '*':
 		s.addSimpleToken(token.STAR)
 	case '=':
@@ -124,15 +128,11 @@ func (s *Scanner) scanToken() {
 			s.addSimpleToken(token.SLASH)
 		}
 	case ' ': // We are basically skipping these, no error, no op
-		if s.match('(', '{') {
-			s.addSimpleToken(token.END)
-		}
 	case '\r':
 	case '\t':
 		// Ignore whitespace
 		break
 	case '\n': // Do nothing but start iterate to the next line
-		s.addSimpleToken(token.END)
 		s.Line += 1
 	case '"':
 		s.string()
@@ -142,20 +142,20 @@ func (s *Scanner) scanToken() {
 		} else if s.isAlpha(c) {
 			s.identifier()
 		} else {
-			glorpError.ScannerError(s.Line, "Unexpected character")
+			s.Lox.Error(s.Line, "Unexpected character")
 		}
 	}
 }
 
 // Similar to advance but does not consume the character, 'lookahead'
-func (s *Scanner) peek() rune {
+func (s *GloxScanner) peek() rune {
 	if s.isAtEnd() {
 		return 'a'
 	}
 	return rune(s.Source[s.Current])
 }
 
-func (s *Scanner) peekNext() rune {
+func (s *GloxScanner) peekNext() rune {
 	fmt.Println(s.Current)
 	// If current + 1 is greater if equal to len of source, if source is 10, and current is 10
 	if s.Current+1 >= len(s.Source) {
@@ -164,7 +164,7 @@ func (s *Scanner) peekNext() rune {
 	return rune(s.Source[s.Current+1])
 }
 
-func (s *Scanner) string() {
+func (s *GloxScanner) string() {
 	for s.peek() != '"' && !s.isAtEnd() { // Keep searching for string closing
 		if s.peek() == '\n' {
 			s.Line += 1
@@ -173,7 +173,7 @@ func (s *Scanner) string() {
 	}
 
 	if s.isAtEnd() { // If it makes it to the end of line before finding closing "
-		glorpError.ScannerError(s.Line, "Unterminated string")
+		s.Lox.Error(s.Line, "Unterminated string")
 		return
 	}
 
@@ -187,7 +187,7 @@ func (s *Scanner) string() {
 }
 
 // Consumes next character of source line and returns it
-func (s *Scanner) advance() rune {
+func (s *GloxScanner) advance() rune {
 	if s.isAtEnd() {
 		return '0'
 	}
@@ -197,37 +197,33 @@ func (s *Scanner) advance() rune {
 	return rune(sub)
 }
 
-func (s *Scanner) addSimpleToken(tokType token.TokenType) {
+func (s *GloxScanner) addSimpleToken(tokType token.TokenType) {
 	s.addToken(tokType, nil)
 }
 
-func (s *Scanner) addToken(tokType token.TokenType, literal *literal.Literal) {
+func (s *GloxScanner) addToken(tokType token.TokenType, literal *literal.Literal) {
 	text := fmt.Sprintf("%v", s.Source[s.Start:s.Current])
 	newToken := token.NewToken(tokType, text, literal, s.Line)
-	s.Tokens = append(s.Tokens, *newToken)
+	s.Tokens = append(s.Tokens, newToken)
 }
 
-func (s *Scanner) match(expected... byte) bool {
+func (s *GloxScanner) match(expected byte) bool {
 	if s.isAtEnd() {
 		return false
 	} // There is no next token, we are at the end
-	for _, exp := range expected {
-		if s.Source[s.Current] == exp {
-			s.Current += 1
-			return true
-		}
-		s.Current += 1
-	}
+	if s.Source[s.Current] != expected {
+		return false
+	} // If it is not expected, ie, = after !, return false
 
 	s.Current += 1 // We are done looking at this char only if the next char is what we expected
-	return false    // The passed char is what we expected
+	return true    // The passed char is what we expected
 }
 
-func (s *Scanner) isDigit(c rune) bool {
+func (s *GloxScanner) isDigit(c rune) bool {
 	return c >= '0' && c <= '9'
 }
 
-func (s *Scanner) number() {
+func (s *GloxScanner) number() {
 	// While the characters being explored are part d
 	for s.isDigit(s.peek()) {
 		s.advance() // What if we try to advance but are at the end?
@@ -249,7 +245,7 @@ func (s *Scanner) number() {
 	s.addToken(token.NUMBER, f64Literal)
 }
 
-func (s *Scanner) identifier() {
+func (s *GloxScanner) identifier() {
 	// While next char is alphanumeric, advance
 	for s.isAlphaNumeric(s.peek()) {
 		s.advance()
@@ -267,11 +263,11 @@ func (s *Scanner) identifier() {
 }
 
 // Check and see if a byte char is alpha numeric
-func (s *Scanner) isAlpha(c rune) bool {
+func (s *GloxScanner) isAlpha(c rune) bool {
 	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'
 }
 
 // If is alphabetical or number
-func (s *Scanner) isAlphaNumeric(c rune) bool {
+func (s *GloxScanner) isAlphaNumeric(c rune) bool {
 	return s.isAlpha(c) || s.isDigit(c)
 }

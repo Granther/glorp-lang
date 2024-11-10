@@ -1,13 +1,11 @@
-package interpreter
+package main
 
 import (
 	"fmt"
-	"glorp/environment"
-	glorpError "glorp/error"
-	"glorp/native"
-	"glorp/token"
-	"glorp/types"
-	"glorp/utils"
+	"glox/ast"
+	"glox/environment"
+	"glox/token"
+	"glox/utils"
 	"reflect"
 )
 
@@ -27,13 +25,13 @@ import (
 
 type Interpreter struct {
 	HadRuntimeError bool
-	Globals         types.Environment
-	Environment     types.Environment
+	Globals         *environment.Environment
+	Environment     *environment.Environment
 }
 
-func NewInterpreter() types.Interpreter {
+func NewInterpreter() *Interpreter {
 	globals := environment.NewEnvironment(nil)
-	globals.Define("clock", native.NewClockCallable())
+	globals.Define("clock", NewClockCallable())
 	return &Interpreter{
 		// Pass nil because we want this to point to the global scope
 		Globals:         globals,
@@ -42,7 +40,7 @@ func NewInterpreter() types.Interpreter {
 	}
 }
 
-func (i *Interpreter) VisitBinaryExpr(expr *types.BinaryExpr) (any, error) {
+func (i *Interpreter) VisitBinaryExpr(expr *ast.BinaryExpr) (any, error) {
 	left, err := i.evaluate(expr.Left)
 	if err != nil {
 		return nil, err
@@ -104,15 +102,15 @@ func (i *Interpreter) VisitBinaryExpr(expr *types.BinaryExpr) (any, error) {
 		l, r, ok := utils.ConvFloat(left, right) // See if it is int
 		if ok {
 			return l + r, nil
-		} else if reflect.TypeOf(left).Kind().String() == "string" && reflect.TypeOf(right).Kind().String() == "string" {
-			return fmt.Sprintf("%v", left) + fmt.Sprintf("%v", right), nil // If they are both strings then concat
+		} else if reflect.TypeOf(l).Kind().String() == "string" && reflect.TypeOf(r).Kind().String() == "string" {
+			return l + r, nil // If they are both strings then concat
 		}
 	}
 
 	return utils.Parenthesize(i, expr.Operator.Lexeme, expr.Left, expr.Right)
 }
 
-func (i *Interpreter) VisitUnaryExpr(expr *types.UnaryExpr) (any, error) {
+func (i *Interpreter) VisitUnaryExpr(expr *ast.UnaryExpr) (any, error) {
 	right, err := i.evaluate(expr.Right)
 	if err != nil {
 		return nil, err
@@ -132,23 +130,19 @@ func (i *Interpreter) VisitUnaryExpr(expr *types.UnaryExpr) (any, error) {
 }
 
 // Recursively looks through layered parens
-func (i *Interpreter) VisitGroupingExpr(expr *types.GroupingExpr) (any, error) {
+func (i *Interpreter) VisitGroupingExpr(expr *ast.GroupingExpr) (any, error) {
 	return i.evaluate(expr.Expr)
 }
 
-func (i *Interpreter) VisitLiteralExpr(expr *types.LiteralExpr) (any, error) {
+func (i *Interpreter) VisitLiteralExpr(expr *ast.LiteralExpr) (any, error) {
 	return expr.Val.Val, nil
 }
 
-func (i *Interpreter) VisitWhileExpr(expr *types.WhileExpr) (any, error) {
+func (i *Interpreter) VisitWhileExpr(expr *ast.WhileExpr) (any, error) {
 	return nil, nil
 }
 
-func (i *Interpreter) VisitReturnExpr(expr *types.ReturnExpr) (any, error) {
-	return nil, nil
-}
-
-func (i *Interpreter) VisitCallExpr(expr *types.CallExpr) (any, error) {
+func (i *Interpreter) VisitCallExpr(expr *ast.CallExpr) (any, error) {
 	callee, err := i.evaluate(expr.Callee)
 	if err != nil {
 		return nil, err
@@ -163,42 +157,31 @@ func (i *Interpreter) VisitCallExpr(expr *types.CallExpr) (any, error) {
 		args = append(args, val)
 	}
 
-	fun, ok := callee.(native.Callable)
+	fun, ok := callee.(Callable)
 	if !ok {
-		glorpError.InterpreterRuntimeError(expr.Paren, fmt.Sprintf("Expected identifier, got type %T", fun))
+		InterpreterRuntimeError(expr.Paren, fmt.Sprintf("Expected identifier, got type %T", fun))
 	}
 
 	// Check that the function has the right amount of args passed, args same len as params
 	if len(args) != fun.Arity() {
-		glorpError.InterpreterRuntimeError(expr.Paren, fmt.Sprintf("Expected %d args but got %d.", fun.Arity(), len(args)))
+		InterpreterRuntimeError(expr.Paren, fmt.Sprintf("Expected %d args but got %d.", fun.Arity(), len(args)))
 	}
 
 	return fun.Call(i, args)
 }
 
-func (i *Interpreter) VisitExprStmt(stmt *types.Expression) error {
+func (i *Interpreter) VisitExprStmt(stmt *ast.Expression) error {
 	i.evaluate(stmt.Expr)
 	return nil
 }
 
-func (i *Interpreter) VisitReturnStmt(stmt *types.Return) error {
-	if stmt.Val != nil {
-		v, err := i.evaluate(stmt.Val)
-		if err != nil {
-			return err
-		}
-		return glorpError.NewReturnErr(v)
-	}
-	return nil // No return val
-}
-
-func (i *Interpreter) VisitPrintStmt(stmt *types.Print) error {
+func (i *Interpreter) VisitPrintStmt(stmt *ast.Print) error {
 	val, _ := i.evaluate(stmt.Expr)
 	fmt.Println(utils.Stringify(val))
 	return nil
 }
 
-func (i *Interpreter) VisitVarStmt(stmt *types.Var) error {
+func (i *Interpreter) VisitVarStmt(stmt *ast.Var) error {
 	var val any
 	var err error
 	if stmt.Initializer != nil { // If variable has initializer " = 10"
@@ -214,18 +197,18 @@ func (i *Interpreter) VisitVarStmt(stmt *types.Var) error {
 	return nil
 }
 
-func (i *Interpreter) VisitFunStmt(stmt *types.Fun) error {
+func (i *Interpreter) VisitFunStmt(stmt *ast.Fun) error {
 	// Take fun syntax node
-	function := native.NewGlorpFunction(*stmt)
+	function := NewGloxFunction(*stmt)
 	i.Environment.Define(stmt.Name.Lexeme, function) // Add function to global environment by name, can be used anywhere now
 	return nil
 }
 
-func (i *Interpreter) VisitBlockStmt(stmt *types.Block) error {
-	return i.ExecuteBlock(stmt.Statements, environment.NewEnvironment(i.Environment))
+func (i *Interpreter) VisitBlockStmt(stmt *ast.Block) error {
+	return i.executeBlock(stmt.Statements, environment.NewEnvironment(i.Environment))
 }
 
-func (i *Interpreter) VisitWhileStmt(stmt *types.While) error {
+func (i *Interpreter) VisitWhileStmt(stmt *ast.While) error {
 	for {
 		val, err := i.evaluate(stmt.Condition)
 		if err != nil {
@@ -245,7 +228,7 @@ func (i *Interpreter) VisitWhileStmt(stmt *types.While) error {
 	return nil
 }
 
-func (i *Interpreter) VisitIfStmt(stmt *types.If) error {
+func (i *Interpreter) VisitIfStmt(stmt *ast.If) error {
 	val, err := i.evaluate(stmt.Condition)
 	if err != nil {
 		return err
@@ -253,17 +236,14 @@ func (i *Interpreter) VisitIfStmt(stmt *types.If) error {
 
 	// Then is like the first if, if true run that statement
 	if i.isTruthy(val) {
-		err = i.execute(stmt.Then)
-		if err != nil {
-			return err
-		}
+		i.execute(stmt.Then)
 	} else if stmt.Final != nil { // Final (else keyword is taken in Go)
 		i.execute(stmt.Final)
 	}
 	return nil
 }
 
-func (i *Interpreter) ExecuteBlock(stmts []types.Stmt, environment types.Environment) error {
+func (i *Interpreter) executeBlock(stmts []ast.Stmt, environment *environment.Environment) error {
 	prev := i.Environment // Save old, for setting back later
 
 	// Change to new block and execute from that env
@@ -284,7 +264,7 @@ func (i *Interpreter) ExecuteBlock(stmts []types.Stmt, environment types.Environ
 	return nil
 }
 
-func (i *Interpreter) VisitAssignExpr(expr *types.AssignExpr) (any, error) {
+func (i *Interpreter) VisitAssignExpr(expr *ast.AssignExpr) (any, error) {
 	val, err := i.evaluate(expr.Val)
 	if err != nil {
 		return nil, err
@@ -293,15 +273,15 @@ func (i *Interpreter) VisitAssignExpr(expr *types.AssignExpr) (any, error) {
 	return val, nil
 }
 
-func (i *Interpreter) VisitVarExpr(expr *types.VarExpr) (any, error) {
+func (i *Interpreter) VisitVarExpr(expr *ast.VarExpr) (any, error) {
 	return i.Environment.Get(expr.Name)
 }
 
-func (i *Interpreter) VisitFunExpr(expr *types.FunExpr) (any, error) {
+func (i *Interpreter) VisitFunExpr(expr *ast.FunExpr) (any, error) {
 	return i.Environment.Get(expr.Name)
 }
 
-func (i *Interpreter) VisitLogicalExpr(expr *types.LogicalExpr) (any, error) {
+func (i *Interpreter) VisitLogicalExpr(expr *ast.LogicalExpr) (any, error) {
 	left, err := i.evaluate(expr.Left)
 	if err != nil {
 		return nil, err
@@ -325,7 +305,7 @@ func (i *Interpreter) VisitLogicalExpr(expr *types.LogicalExpr) (any, error) {
 	return i.evaluate(expr.Right)
 }
 
-func (i *Interpreter) Print(expr types.Expr) string {
+func (i *Interpreter) Print(expr ast.Expr) string {
 	val, err := expr.Accept(i)
 	if err != nil {
 	}
@@ -333,7 +313,7 @@ func (i *Interpreter) Print(expr types.Expr) string {
 }
 
 // Calls the visit method for whatever dtype it is
-func (i *Interpreter) evaluate(expr types.Expr) (any, error) {
+func (i *Interpreter) evaluate(expr ast.Expr) (any, error) {
 	return expr.Accept(i)
 }
 
@@ -357,7 +337,7 @@ func checkNumberOperand(operator token.Token, operand any) error {
 	_, ok := utils.IsFloat(operand)
 
 	if !ok {
-		glorpError.InterpreterRuntimeError(operator, "Operand must be number.")
+		InterpreterRuntimeError(operator, "Operand must be number.")
 		return fmt.Errorf("unable to convert operand to int")
 	}
 	return nil
@@ -366,13 +346,13 @@ func checkNumberOperand(operator token.Token, operand any) error {
 func checkNumberOperands(operator token.Token, left any, right any) (float64, float64, error) {
 	l, r, ok := utils.ConvFloat(left, right)
 	if !ok {
-		glorpError.InterpreterRuntimeError(operator, "Operands must be numbers.")
+		InterpreterRuntimeError(operator, "Operands must be numbers.")
 		return -1, -1, fmt.Errorf("unable to convert operands to int")
 	}
 	return l, r, nil
 }
 
-func (i *Interpreter) Interpret(stmts []types.Stmt) {
+func (i *Interpreter) interpret(stmts []ast.Stmt) {
 	for _, stmt := range stmts {
 		if i.execute(stmt) != nil {
 			fmt.Println("Error in interpret")
@@ -382,16 +362,8 @@ func (i *Interpreter) Interpret(stmts []types.Stmt) {
 	}
 }
 
-func (i *Interpreter) execute(stmt types.Stmt) error {
+func (i *Interpreter) execute(stmt ast.Stmt) error {
 	return stmt.Accept(i)
-}
-
-func (i *Interpreter) GetGlobals() types.Environment {
-	return i.Globals
-}
-
-func  (i *Interpreter) GetHadRuntimeError() bool {
-	return i.HadRuntimeError
 }
 
 // Variable declarations are statements, because we are doing something
@@ -403,7 +375,7 @@ func  (i *Interpreter) GetHadRuntimeError() bool {
 // Create an entirely new environment inside each scope block
 // We can discard this entire env and not be afraid of deleting global vars of the same name
 // Shadowing
-// When 2 vars (maybe global and local) have the same name. The local var ctypess a
+// When 2 vars (maybe global and local) have the same name. The local var casts a
 // 'shadow' over the global one, hiding it
 // Environment chaining
 // Each environment has link to the env above, all ending in the global scope
@@ -412,5 +384,3 @@ func  (i *Interpreter) GetHadRuntimeError() bool {
 // Blocks
 // A possibly empty series of statements for decls in curly braces
 // A block is a statement, can appear anywhere a statement is allowed
-
-// If we find a return statement, go up to main

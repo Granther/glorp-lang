@@ -2,7 +2,7 @@ package token
 
 import (
 	"fmt"
-	"glorp/literal"
+	"glox/literal"
 )
 
 type TokenType int
@@ -20,7 +20,6 @@ const (
 	SEMICOLON
 	SLASH
 	STAR
-	END
 
 	// One or two character tokens.
 	BANG
@@ -54,7 +53,6 @@ const (
 	TRUE
 	VAR
 	WHILE
-	GLORPMAIN
 
 	// End of file
 	EOF
