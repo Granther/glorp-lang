@@ -59,6 +59,8 @@ func (s *Scanner) tokenize() (token.Token, error) {
 		return s.addToken(token.END), nil
 	case ' ':
 		fmt.Println("Space")
+	case ';':
+		fmt.Println("Semicolon")
 	case '=':
 		if s.next('=') {
 			fmt.Println("Double Equals")
@@ -72,10 +74,12 @@ func (s *Scanner) tokenize() (token.Token, error) {
 		// Is the char numeric?
 		// Is the next char numeric?
 		if s.isDigit() {
+			fmt.Println("Current c: ", string(c))
 			fmt.Println("number tok")
 			return s.number(), nil
 		}
 		// We are in a tok that does not contain any of the above chars
+		fmt.Println("Adding ident")
 		return s.addToken(token.IDENTIFIER), nil
 	}
 
@@ -110,13 +114,15 @@ func (s *Scanner) isDigit() bool {
 }
 
 func (s *Scanner) number() token.Token {
-	for s.isDigit() && !s.isAtEnd() {
-		s.advance()
+	fmt.Println(string(s.Source[s.Current]))
+	for !s.isAtEnd() {
+		if 
+		if !s.isDigit() {
+			break
+		} 
+		fmt.Println("Advance: ", string(s.advance()))
 	}
-	// if s.isAtEnd() {
-	// 	return token.Token{}
-	// }
-	fmt.Println(string(s.Source[s.Current-1]))
+
 	return s.addToken(token.NUMBER)
 }
 
