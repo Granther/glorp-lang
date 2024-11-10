@@ -139,7 +139,7 @@ func (p *Parser) varDeclaration() (types.Stmt, error) {
 	}
 
 	// If = does not exist in decl, is empty decl, pass empty initial to var decl
-	p.consume(token.SEMICOLON, "Expect ';' after variable in declaration.")
+	p.consume(token.END, "Expect 'end' after variable in declaration.")
 	return types.NewVar(name, initializer), nil
 }
 
@@ -275,7 +275,7 @@ func (p *Parser) returnStmt() (types.Stmt, error) {
 		}
 		val = expr
 	}
-	_, err := p.consume(token.SEMICOLON, "Expect ';' after return value.")
+	_, err := p.consume(token.END, "Expect 'end' after return value.")
 	if err != nil {
 		return nil, err
 	}
@@ -341,7 +341,7 @@ func (p *Parser) printStmt() (types.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	p.consume(token.SEMICOLON, "Expect ';' after value.")
+	p.consume(token.END, "Expect 'end' after value.")
 	return types.NewPrint(val), nil
 }
 
@@ -350,7 +350,7 @@ func (p *Parser) exprStmt() (types.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	p.consume(token.SEMICOLON, "Expect ';' after value.")
+	p.consume(token.END, "Expect 'end' after value.")
 	return types.NewExpression(val), nil
 }
 
@@ -598,7 +598,7 @@ func (p *Parser) consume(tokType token.TokenType, message string) (token.Token, 
 	} // If next token is passed type, consume it and pass the previous token
 
 	glorpError.ParserError(p.peek(), message)
-	return token.Token{}, fmt.Errorf(message)
+	return token.Token{}, fmt.Errorf("message")
 }
 
 // Discards tokens until it has found the end of a statement

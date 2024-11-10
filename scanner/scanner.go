@@ -88,7 +88,7 @@ func (s *Scanner) scanToken() {
 	case '+':
 		s.addSimpleToken(token.PLUS)
 	case ';':
-		s.addSimpleToken(token.END)
+		s.addSimpleToken(token.SEMICOLON)
 	case '*':
 		s.addSimpleToken(token.STAR)
 	case '=':
@@ -124,14 +124,15 @@ func (s *Scanner) scanToken() {
 			s.addSimpleToken(token.SLASH)
 		}
 	case ' ': // We are basically skipping these, no error, no op
-		if s.match('(', '{') {
-			s.addSimpleToken(token.END)
-		}
 	case '\r':
 	case '\t':
 		// Ignore whitespace
 		break
 	case '\n': // Do nothing but start iterate to the next line
+		// s.addSimpleToken(token.SEMICOLON)
+		// if s.Tokens[len(s.Tokens)-1].Lexeme == "{" {
+		// 	break
+		// } 
 		s.addSimpleToken(token.END)
 		s.Line += 1
 	case '"':
@@ -207,20 +208,16 @@ func (s *Scanner) addToken(tokType token.TokenType, literal *literal.Literal) {
 	s.Tokens = append(s.Tokens, *newToken)
 }
 
-func (s *Scanner) match(expected... byte) bool {
+func (s *Scanner) match(expected byte) bool {
 	if s.isAtEnd() {
 		return false
 	} // There is no next token, we are at the end
-	for _, exp := range expected {
-		if s.Source[s.Current] == exp {
-			s.Current += 1
-			return true
-		}
-		s.Current += 1
-	}
+	if s.Source[s.Current] != expected {
+		return false
+	} // If it is not expected, ie, = after !, return false
 
 	s.Current += 1 // We are done looking at this char only if the next char is what we expected
-	return false    // The passed char is what we expected
+	return true    // The passed char is what we expected
 }
 
 func (s *Scanner) isDigit(c rune) bool {

@@ -1,5 +1,14 @@
 fun foo(a, b) {
-    return a + b;
+    return a + b
 }
 
-print foo(10, 11);
+fun foo(a, b) {return a + b}
+
+if (x) {print "hi"}
+
+print foo(10, 11)
+
+
+
+
+
