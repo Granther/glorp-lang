@@ -134,6 +134,9 @@ func (s *Scanner) scanToken() {
 		// }
 		s.addSimpleToken(token.END)
 		s.Line += 1
+		for s.match('\n') {
+			s.Line += 1
+		}
 	case '"':
 		s.string()
 	default:

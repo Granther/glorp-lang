@@ -47,6 +47,7 @@ func NewParser() *Parser {
 
 func (p *Parser) Parse(tokens []token.Token) []types.Stmt {
 	p.Tokens = tokens
+
 	statements := []types.Stmt{}
 	for !p.isAtEnd() {
 		decl, err := p.declaration()
@@ -285,20 +286,20 @@ func (p *Parser) returnStmt() (types.Stmt, error) {
 }
 
 func (p *Parser) whileStmt() (types.Stmt, error) {
-	_, err := p.consume(token.LEFT_PAREN, "Expect '(' after 'while'.")
-	if err != nil {
-		return nil, err
-	}
+	// _, err := p.consume(token.LEFT_PAREN, "Expect '(' after 'while'.")
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	condition, err := p.expression()
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = p.consume(token.RIGHT_BRACE, "Expect ')' after condition.")
-	if err != nil {
-		return nil, err
-	}
+	// _, err = p.consume(token.RIGHT_BRACE, "Expect ')' after condition.")
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	body, err := p.statement()
 	if err != nil {

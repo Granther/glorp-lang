@@ -1,7 +1,12 @@
 var z = "10"
 var a = 9
+
 if a == 9 {
     print "is 9"
 }
+while a == 9 {
+    print "wow"
+}
+
 print z
 print "hello"
