@@ -10,7 +10,7 @@ type Interpreter interface {
 }
 
 type Environment interface {
-	Get(name token.Token) (any, error)
+	Get(name string) (any, error)
 	Define(name string, val any)
 	Assign(name token.Token, val any) error
 }

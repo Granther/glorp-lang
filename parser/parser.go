@@ -68,7 +68,7 @@ func (p *Parser) declaration() (types.Stmt, error) {
 	if p.match(token.VAR) {
 		return p.varDeclaration()
 	}
-	if p.match(token.FUN) {
+	if p.match(token.GLUNC) {
 		return p.funDeclaration("function")
 	}
 	// If not, fallback to standard stmt
@@ -102,7 +102,7 @@ func (p *Parser) funDeclaration(kind string) (types.Stmt, error) {
 			}
 			if !p.match(token.COMMA) {
 				break
-			} // Break if we DONT see a comma\
+			} // Break if we DONT see a comma
 		}
 	}
 
@@ -616,7 +616,7 @@ func (p *Parser) syncronize() {
 
 		switch p.peek().Type {
 		case token.CLASS:
-		case token.FUN:
+		case token.GLUNC:
 		case token.VAR:
 		case token.FOR:
 		case token.IF:

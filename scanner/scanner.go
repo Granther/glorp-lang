@@ -24,7 +24,7 @@ func NewScanner() *Scanner {
 	keywords["else"] = token.ELSE
 	keywords["false"] = token.FALSE
 	keywords["for"] = token.FOR
-	keywords["fun"] = token.FUN
+	keywords["glunc"] = token.GLUNC
 	keywords["if"] = token.IF
 	keywords["nil"] = token.NIL
 	keywords["or"] = token.OR

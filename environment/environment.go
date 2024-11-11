@@ -19,8 +19,8 @@ func NewEnvironment(enclosing types.Environment) *Environment {
 }
 
 // We want undefined vars to be bugs
-func (e *Environment) Get(name token.Token) (any, error) {
-	val, ok := e.Values[name.Lexeme]
+func (e *Environment) Get(name string) (any, error) {
+	val, ok := e.Values[name]
 	if ok {
 		return val, nil
 	}
@@ -30,7 +30,7 @@ func (e *Environment) Get(name token.Token) (any, error) {
 		return e.Enlcosing.Get(name)
 	}
 
-	return nil, fmt.Errorf("undefined variable %s", name.Lexeme)
+	return nil, fmt.Errorf("undefined variable %s", name)
 }
 
 func (e *Environment) Define(name string, val any) {

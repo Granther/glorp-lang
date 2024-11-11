@@ -43,7 +43,7 @@ const (
 	CLASS
 	ELSE
 	FALSE
-	FUN
+	GLUNC
 	FOR
 	IF
 	NIL

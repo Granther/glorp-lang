@@ -294,11 +294,11 @@ func (i *Interpreter) VisitAssignExpr(expr *types.AssignExpr) (any, error) {
 }
 
 func (i *Interpreter) VisitVarExpr(expr *types.VarExpr) (any, error) {
-	return i.Environment.Get(expr.Name)
+	return i.Environment.Get(expr.Name.Lexeme)
 }
 
 func (i *Interpreter) VisitFunExpr(expr *types.FunExpr) (any, error) {
-	return i.Environment.Get(expr.Name)
+	return i.Environment.Get(expr.Name.Lexeme)
 }
 
 func (i *Interpreter) VisitLogicalExpr(expr *types.LogicalExpr) (any, error) {
@@ -373,14 +373,46 @@ func checkNumberOperands(operator token.Token, left any, right any) (float64, fl
 }
 
 func (i *Interpreter) Interpret(stmts []types.Stmt) {
-	for _, stmt := range stmts {
-		if i.execute(stmt) != nil {
-			fmt.Println("Error in interpret")
-			i.HadRuntimeError = true
-			return
-		}
+	g, err := i.Environment.Get("glorp")
+	if err != nil {
+		glorpError.InterpreterRuntimeError(token.Token{}, "mlorp entry glunction not found.")
+		return
 	}
+	glorpFunc, ok := g.(native.Callable)
+	if !ok {
+		glorpError.InterpreterRuntimeError(token.Token{}, "unable to convert mlorp to statement.")
+		return
+	}
+
+	// for _, stmt := range stmts {
+	// 	if i.execute(stmt) != nil {
+	// 		fmt.Println("Error in interpret")
+	// 		i.HadRuntimeError = true
+	// 		return
+	// 	}
+	// }
+	// if i.execute(glorpFunc) != nil {
+	// 	fmt.Println("Error in interpret")
+	// 	i.HadRuntimeError = true
+	// 	return
+	// }
+	glorpFunc.Call(i, []any{})
 }
+
+/*
+var i, y = 10, 0
+
+
+
+var x = i <|> i - 1
+var x = func y(x) return x / 2
+
+print y(x) // 5
+
+print i // 9
+print i // 8
+
+*/
 
 func (i *Interpreter) execute(stmt types.Stmt) error {
 	return stmt.Accept(i)
@@ -390,7 +422,7 @@ func (i *Interpreter) GetGlobals() types.Environment {
 	return i.Globals
 }
 
-func  (i *Interpreter) GetHadRuntimeError() bool {
+func (i *Interpreter) GetHadRuntimeError() bool {
 	return i.HadRuntimeError
 }
 
