@@ -54,3 +54,7 @@ func (e *Environment) Assign(name token.Token, val any) error {
 
 	return fmt.Errorf("undefined variable %s", name.Lexeme)
 }
+
+func (e *Environment) String() string {
+	return fmt.Sprintf("%v", e.Values)
+}

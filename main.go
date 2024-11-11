@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"glorp/environment"
 	"glorp/interpreter"
 	"glorp/parser"
 	"glorp/scanner"
@@ -16,14 +17,17 @@ type Glorp struct {
 	Scanner     *scanner.Scanner
 	Parser      *parser.Parser
 	Interpreter types.Interpreter
+	Environment types.Environment
 }
 
 func NewGlorp() *Glorp {
+	env := environment.NewEnvironment(nil)
 	return &Glorp{
 		HadError:    false,
 		Scanner:     scanner.NewScanner(),
-		Parser:      parser.NewParser(),
-		Interpreter: interpreter.NewInterpreter(),
+		Parser:      parser.NewParser(env),
+		Interpreter: interpreter.NewInterpreter(env),
+		Environment: env,
 	}
 }
 

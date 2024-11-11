@@ -1,4 +1,9 @@
 var x = 10
-glunc glorp() {
-    var z = 10
+
+glunc splink() {
+    print "splink"
+}
+
+glunc mlorp() {
+    print "hello"
 }

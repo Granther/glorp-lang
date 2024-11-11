@@ -27,17 +27,17 @@ import (
 
 type Interpreter struct {
 	HadRuntimeError bool
-	Globals         types.Environment
-	Environment     types.Environment
+	// Globals         types.Environment
+	Environment types.Environment
 }
 
-func NewInterpreter() types.Interpreter {
-	globals := environment.NewEnvironment(nil)
-	globals.Define("clock", native.NewClockCallable())
+func NewInterpreter(env types.Environment) types.Interpreter {
+	// globals := environment.NewEnvironment(nil)
+	// globals.Define("clock", native.NewClockCallable())
 	return &Interpreter{
 		// Pass nil because we want this to point to the global scope
-		Globals:         globals,
-		Environment:     globals,
+		// Globals:         globals,
+		Environment:     env,
 		HadRuntimeError: false,
 	}
 }
@@ -216,8 +216,8 @@ func (i *Interpreter) VisitVarStmt(stmt *types.Var) error {
 
 func (i *Interpreter) VisitFunStmt(stmt *types.Fun) error {
 	// Take fun syntax node
-	function := native.NewGlorpFunction(*stmt)
-	i.Environment.Define(stmt.Name.Lexeme, function) // Add function to global environment by name, can be used anywhere now
+	// function := native.NewGlorpFunction(*stmt)
+	// i.Environment.Define(stmt.Name.Lexeme, function) // Add function to global environment by name, can be used anywhere now
 	return nil
 }
 
@@ -373,16 +373,28 @@ func checkNumberOperands(operator token.Token, left any, right any) (float64, fl
 }
 
 func (i *Interpreter) Interpret(stmts []types.Stmt) {
-	g, err := i.Environment.Get("glorp")
+	fmt.Println(i.Environment.String())
+	g, err := i.Environment.Get("mlorp")
 	if err != nil {
 		glorpError.InterpreterRuntimeError(token.Token{}, "mlorp entry glunction not found.")
 		return
 	}
-	glorpFunc, ok := g.(native.Callable)
+
+	f, ok := g.(*types.FunExpr)
 	if !ok {
-		glorpError.InterpreterRuntimeError(token.Token{}, "unable to convert mlorp to statement.")
-		return
+		fmt.Println("Something")
 	}
+	x := types.NewCallExpr(f, token.RIGHT_PAREN, []types.Expr{})
+	x.Accept(i)
+	// function := native.NewGlorpFunction(x)
+	// function.Call(i, []any{})
+
+	// i.execute(g.(types.Stmt))
+	// glorpFunc, ok := g.(native.Callable)
+	// if !ok {
+	// 	glorpError.InterpreterRuntimeError(token.Token{}, "unable to convert mlorp to statement.")
+	// 	return
+	// }
 
 	// for _, stmt := range stmts {
 	// 	if i.execute(stmt) != nil {
@@ -396,7 +408,8 @@ func (i *Interpreter) Interpret(stmts []types.Stmt) {
 	// 	i.HadRuntimeError = true
 	// 	return
 	// }
-	glorpFunc.Call(i, []any{})
+	// glorpFunc.Call(i, []any{})
+
 }
 
 /*
@@ -419,7 +432,7 @@ func (i *Interpreter) execute(stmt types.Stmt) error {
 }
 
 func (i *Interpreter) GetGlobals() types.Environment {
-	return i.Globals
+	return i.Environment
 }
 
 func (i *Interpreter) GetHadRuntimeError() bool {

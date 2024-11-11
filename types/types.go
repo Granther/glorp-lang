@@ -13,6 +13,7 @@ type Environment interface {
 	Get(name string) (any, error)
 	Define(name string, val any)
 	Assign(name token.Token, val any) error
+	String() string
 }
 
 type Stmt interface {

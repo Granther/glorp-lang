@@ -35,13 +35,15 @@ import (
 // We syncronize back up with the unexplored par of the program that isnt directly affetced by the error
 // This means we throw away all tokens on that line
 type Parser struct {
-	Tokens  []token.Token
-	Current int
+	Tokens      []token.Token
+	Environment types.Environment
+	Current     int
 }
 
-func NewParser() *Parser {
+func NewParser(e types.Environment) *Parser {
 	return &Parser{
-		Current: 0,
+		Current:     0,
+		Environment: e,
 	}
 }
 
@@ -69,7 +71,6 @@ func (p *Parser) declaration() (types.Stmt, error) {
 		return p.varDeclaration()
 	}
 	if p.match(token.GLUNC) {
-		fmt.Println("Loking at glumnc")
 		return p.funDeclaration("function")
 	}
 	// If not, fallback to standard stmt
@@ -123,7 +124,9 @@ func (p *Parser) funDeclaration(kind string) (types.Stmt, error) {
 		return nil, err
 	}
 
-	return types.NewFun(name, params, body), nil
+	fun := types.NewFunExpr(name, params, body)
+	p.Environment.Define(name.Lexeme, fun)
+	return types.NewFun(name, params, body, p.Environment), nil
 }
 
 func (p *Parser) varDeclaration() (types.Stmt, error) {
@@ -183,11 +186,14 @@ func (p *Parser) statement() (types.Stmt, error) {
 }
 
 func (p *Parser) block() ([]types.Stmt, error) {
+	fmt.Println("In block")
 	var stmts []types.Stmt
 
 	// While the next tok is not right brace and we are not at the end
 	for !p.check(token.RIGHT_BRACE) && !p.isAtEnd() {
-		p.match(token.END)
+		if p.match(token.END) {
+			continue
+		}
 		decl, err := p.declaration()
 		if err != nil {
 			return nil, err

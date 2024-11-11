@@ -33,9 +33,10 @@ type While struct {
 }
 
 type Fun struct {
-	Params []token.Token
-	Name   token.Token
-	Body   []Stmt
+	Params      []token.Token
+	Name        token.Token
+	Body        []Stmt
+	Environment Environment
 }
 
 type Return struct {
@@ -50,11 +51,12 @@ func NewReturn(keyword token.Token, val Expr) Stmt {
 	}
 }
 
-func NewFun(name token.Token, params []token.Token, body []Stmt) Stmt {
+func NewFun(name token.Token, params []token.Token, body []Stmt, env Environment) Stmt {
 	return &Fun{
-		Params: params,
-		Name:   name,
-		Body:   body,
+		Params:      params,
+		Name:        name,
+		Body:        body,
+		Environment: env,
 	}
 }
 
