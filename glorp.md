@@ -4,3 +4,5 @@
 - Dynamic typing
 - Unique var linking
 
+### No Semicolons
+- 

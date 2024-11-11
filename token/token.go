@@ -21,6 +21,7 @@ const (
 	SLASH
 	STAR
 	END
+	SPACE
 
 	// One or two character tokens.
 	BANG

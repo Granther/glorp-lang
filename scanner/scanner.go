@@ -2,9 +2,9 @@ package scanner
 
 import (
 	"fmt"
+	glorpError "glorp/error"
 	"glorp/literal"
 	"glorp/token"
-	glorpError "glorp/error"
 	"strconv"
 )
 
@@ -64,7 +64,7 @@ func (s *Scanner) ScanTokens(source string) ([]token.Token, error) {
 // If current character being checked is >= len of source
 // If we are parsing beyond the source return true
 func (s *Scanner) isAtEnd() bool {
-	return s.Current >= len(s.Source)-1
+	return s.Current >= len(s.Source)
 }
 
 func (s *Scanner) scanToken() {
@@ -127,12 +127,11 @@ func (s *Scanner) scanToken() {
 	case '\r':
 	case '\t':
 		// Ignore whitespace
-		break
 	case '\n': // Do nothing but start iterate to the next line
 		// s.addSimpleToken(token.SEMICOLON)
 		// if s.Tokens[len(s.Tokens)-1].Lexeme == "{" {
 		// 	break
-		// } 
+		// }
 		s.addSimpleToken(token.END)
 		s.Line += 1
 	case '"':
@@ -157,7 +156,6 @@ func (s *Scanner) peek() rune {
 }
 
 func (s *Scanner) peekNext() rune {
-	fmt.Println(s.Current)
 	// If current + 1 is greater if equal to len of source, if source is 10, and current is 10
 	if s.Current+1 >= len(s.Source) {
 		return '0'
@@ -173,13 +171,15 @@ func (s *Scanner) string() {
 		s.advance()
 	}
 
+	s.advance()
+
 	if s.isAtEnd() { // If it makes it to the end of line before finding closing "
 		glorpError.ScannerError(s.Line, "Unterminated string")
 		return
 	}
 
 	// s.Current is one less than the closing ", make Current into "
-	s.advance()
+	// s.advance()
 
 	// Cut the begining and closing "'s off
 	val := s.Source[s.Start+1 : s.Current-1]
@@ -248,7 +248,7 @@ func (s *Scanner) number() {
 
 func (s *Scanner) identifier() {
 	// While next char is alphanumeric, advance
-	for s.isAlphaNumeric(s.peek()) {
+	for s.isAlphaNumeric(s.peek()) && !s.isAtEnd() {
 		s.advance()
 	}
 

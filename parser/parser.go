@@ -56,6 +56,7 @@ func (p *Parser) Parse(tokens []token.Token) []types.Stmt {
 			continue
 		}
 		statements = append(statements, decl)
+		p.match(token.END)
 	}
 	return statements
 }
@@ -139,7 +140,7 @@ func (p *Parser) varDeclaration() (types.Stmt, error) {
 	}
 
 	// If = does not exist in decl, is empty decl, pass empty initial to var decl
-	p.consume(token.END, "Expect 'end' after variable in declaration.")
+	// p.consume(token.END, "Expect 'end' after variable in declaration.")
 	return types.NewVar(name, initializer), nil
 }
 
@@ -183,6 +184,7 @@ func (p *Parser) block() ([]types.Stmt, error) {
 
 	// While the next tok is not right brace and we are not at the end
 	for !p.check(token.RIGHT_BRACE) && !p.isAtEnd() {
+		p.match(token.END)
 		decl, err := p.declaration()
 		if err != nil {
 			return nil, err
@@ -268,7 +270,7 @@ func (p *Parser) forStmt() (types.Stmt, error) {
 func (p *Parser) returnStmt() (types.Stmt, error) {
 	keyword := p.previous()
 	var val types.Expr = nil
-	if !p.check(token.SEMICOLON) { // As long as ; is not the next token, cause a ; cant start an expression
+	if !p.check(token.END) { // As long as ; is not the next token, cause a ; cant start an expression
 		expr, err := p.expression()
 		if err != nil {
 			return nil, err
@@ -326,6 +328,8 @@ func (p *Parser) ifStmt() (types.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Println("Made ti")
 
 	var finalBranch types.Stmt
 
@@ -429,7 +433,6 @@ func (p *Parser) equality() (types.Expr, error) {
 
 	for p.match(token.BANG_EQUAL, token.EQUAL_EQUAL) {
 		operator := p.previous()
-		fmt.Println("Equality prev lexeme: ", operator.Lexeme)
 
 		right, _ := p.comparison()
 		expr = types.NewBinaryExpr(expr, operator, right)
@@ -608,7 +611,7 @@ func (p *Parser) syncronize() {
 	p.advance() // Consume a token
 
 	for !p.isAtEnd() {
-		if p.previous().Type == token.SEMICOLON {
+		if p.previous().Type == token.END {
 			return
 		} // Found statement boundary
 
