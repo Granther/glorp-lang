@@ -1,5 +1,4 @@
 var x = 10
-
 glunc glorp() {
-    print "x"
+    var z = 10
 }

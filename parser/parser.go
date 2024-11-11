@@ -50,6 +50,7 @@ func (p *Parser) Parse(tokens []token.Token) []types.Stmt {
 
 	statements := []types.Stmt{}
 	for !p.isAtEnd() {
+		p.match(token.END)
 		decl, err := p.declaration()
 		if err != nil {
 			fmt.Println("Error in decl, syncronizing...")
@@ -57,7 +58,6 @@ func (p *Parser) Parse(tokens []token.Token) []types.Stmt {
 			continue
 		}
 		statements = append(statements, decl)
-		p.match(token.END)
 	}
 	return statements
 }
@@ -69,6 +69,7 @@ func (p *Parser) declaration() (types.Stmt, error) {
 		return p.varDeclaration()
 	}
 	if p.match(token.GLUNC) {
+		fmt.Println("Loking at glumnc")
 		return p.funDeclaration("function")
 	}
 	// If not, fallback to standard stmt
@@ -80,6 +81,7 @@ func (p *Parser) funDeclaration(kind string) (types.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	_, err = p.consume(token.LEFT_PAREN, fmt.Sprintf("Expect '(' after %s name", kind))
 	if err != nil {
 		return nil, err
