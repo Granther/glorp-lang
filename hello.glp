@@ -1,6 +1,6 @@
 var z = "10"
 var a = 9
-if (a != 9) {
+if a == 9 {
     print "is 9"
 }
 print z

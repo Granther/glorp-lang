@@ -309,27 +309,25 @@ func (p *Parser) whileStmt() (types.Stmt, error) {
 }
 
 func (p *Parser) ifStmt() (types.Stmt, error) {
-	_, err := p.consume(token.LEFT_PAREN, "Expect '(' after 'if'.")
-	if err != nil {
-		return nil, err
-	}
+	// _, err := p.consume(token.LEFT_PAREN, "Expect '(' after 'if'.")
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	condition, err := p.expression()
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = p.consume(token.RIGHT_PAREN, "Expect ')' after condition.")
-	if err != nil {
-		return nil, err
-	}
+	// _, err = p.consume(token.RIGHT_PAREN, "Expect ')' after condition.")
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	thenBranch, err := p.statement()
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Println("Made ti")
 
 	var finalBranch types.Stmt
 
