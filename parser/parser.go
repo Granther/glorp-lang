@@ -336,10 +336,6 @@ func (p *Parser) returnStmt() (types.Stmt, error) {
 }
 
 func (p *Parser) tryStmt() (types.Stmt, error) {
-	// _, err := p.consume(token.LEFT_, "Expect '(' after 'while'.")
-	// if err != nil {
-	// 	return nil, err
-	// }
 	var ohshit types.Stmt
 
 	attempt, err := p.statement()
@@ -347,11 +343,7 @@ func (p *Parser) tryStmt() (types.Stmt, error) {
 		return nil, err
 	}
 
-	// fmt.Println(string(p.peek().Lexeme))
-	// os.Exit(1)
-
 	if p.match(token.OHSHIT) {
-		fmt.Println("Found ohshit")
 		ohshit, err = p.statement()
 		if err != nil {
 			return nil, err
@@ -362,20 +354,10 @@ func (p *Parser) tryStmt() (types.Stmt, error) {
 }
 
 func (p *Parser) whileStmt() (types.Stmt, error) {
-	// _, err := p.consume(token.LEFT_PAREN, "Expect '(' after 'while'.")
-	// if err != nil {
-	// 	return nil, err
-	// }
-
 	condition, err := p.expression()
 	if err != nil {
 		return nil, err
 	}
-
-	// _, err = p.consume(token.RIGHT_BRACE, "Expect ')' after condition.")
-	// if err != nil {
-	// 	return nil, err
-	// }
 
 	body, err := p.statement()
 	if err != nil {

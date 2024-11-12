@@ -1,14 +1,9 @@
 glunc mlorp() {
-    try {
-        var x = splink()
-    } 
-    ohshit {
-        print "Error in try"
-    }
+    splink()
+    print "huhh"
 }
 
 glunc splink() {
-    print "splink"
     wert "x should NOT be true"
 }
 // All functions can evaluate to a wert if one is werted
