@@ -12,6 +12,10 @@ type Print struct {
 	Expr Expr
 }
 
+type Wert struct {
+	Expr Expr
+}
+
 type Var struct {
 	Name        token.Token
 	Initializer Expr
@@ -83,6 +87,12 @@ func NewBlock(statements []Stmt) Stmt {
 
 func NewPrint(expr Expr) Stmt {
 	return &Print{
+		Expr: expr,
+	}
+}
+
+func NewWert(expr Expr) Stmt {
+	return &Wert{
 		Expr: expr,
 	}
 }

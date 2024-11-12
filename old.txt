@@ -5,3 +5,7 @@ glunc mlorp() {
     print x
 }
 
+    hewert { // Essentially wert -> try -> ohshit -> wert s
+        var x = splink()
+        print x
+    }

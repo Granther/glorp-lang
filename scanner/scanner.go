@@ -35,6 +35,9 @@ func NewScanner() *Scanner {
 	keywords["true"] = token.TRUE
 	keywords["var"] = token.VAR
 	keywords["while"] = token.WHILE
+	keywords["wert"] = token.WERT
+	keywords["try"] = token.TRY
+	keywords["ohshit"] = token.OHSHIT
 
 	return &Scanner{
 		Tokens:   []token.Token{},

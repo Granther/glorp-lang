@@ -1,21 +1,20 @@
-mlorp()
-splink()
-var h = 10
-
 glunc mlorp() {
-    print "mlorp"
-    print t
+    try {
+        var x = splink()
+        print x
+    } ohshit s {
+        print s
+        print "splink failed"
+    }
 }
 
 glunc splink() {
     print "splink"
+    var x = true
+    print x
+    for x {
+        if x == true {
+            wert "x should NOT be true"
+        }
+    }
 }
-
-
-
-
-
-// Hello
-// How are you
-print h
-

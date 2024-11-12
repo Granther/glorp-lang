@@ -373,19 +373,28 @@ func checkNumberOperands(operator token.Token, left any, right any) (float64, fl
 }
 
 func (i *Interpreter) Interpret(stmts []types.Stmt) {
-	// g, err := i.Environment.Get("mlorp")
-	// if err != nil {
-	// 	glorpError.InterpreterRuntimeError(token.Token{}, "mlorp entry glunction not found.")
-	// 	return
-	// }
+	for _, stmt := range stmts {
+	    switch stmt.(type) {
+	    case *types.Var:
+	        i.execute(stmt)
+	    case *types.Fun:
+	        i.execute(stmt)
+	    }
+	}
 
-	// f, ok := g.(native.Callable)
-	// if !ok {
-	// 	glorpError.InterpreterRuntimeError(token.Token{}, "unable to read mlorp entry glunc to callable.")
-	// 	return
-	// }
+	g, err := i.Environment.Get("mlorp")
+	if err != nil {
+		glorpError.InterpreterRuntimeError(token.Token{}, "mlorp entry glunction not found.")
+		return
+	}
 
-	// f.Call(i, []any{})
+	f, ok := g.(native.Callable)
+	if !ok {
+		glorpError.InterpreterRuntimeError(token.Token{}, "unable to read mlorp entry glunc to callable.")
+		return
+	}
+
+	f.Call(i, []any{})
 
 	// x := types.NewCallExpr(f, token.RIGHT_PAREN, []types.Expr{})
 	// x.Accept(i)
@@ -413,22 +422,13 @@ func (i *Interpreter) Interpret(stmts []types.Stmt) {
 	// }
 	// glorpFunc.Call(i, []any{})
 
-	for _, stmt := range stmts {
-	    switch stmt.(type) {
-	    case *types.Var:
-	        i.execute(stmt)
-	    case *types.Fun:
-	        i.execute(stmt)
-	    }
-	}
-
-	for _, stmt := range stmts {
-		if i.execute(stmt) != nil {
-			fmt.Println("Error in interpret")
-			i.HadRuntimeError = true
-			return
-		}
-	}
+	// for _, stmt := range stmts {
+	// 	if i.execute(stmt) != nil {
+	// 		fmt.Println("Error in interpret")
+	// 		i.HadRuntimeError = true
+	// 		return
+	// 	}
+	// }
 
 	// Second pass: execute normal statements
 	// for _, stmt := range stmts {

@@ -163,6 +163,11 @@ func (p *Parser) varDeclaration() (types.Stmt, error) {
 		}
 	}
 
+	_, err = p.consume(token.END, "Expect 'end' after var decl/init.")
+	if err != nil {
+		return nil, err
+	}
+
 	// v, ok := types.NewVar(name, initializer).(*types.Var)
 	// if !ok {
 	// 	return nil, fmt.Errorf("unable to convert to type var")
@@ -195,6 +200,10 @@ func (p *Parser) statement() (types.Stmt, error) {
 
 	if p.match(token.WHILE) {
 		return p.whileStmt()
+	}
+
+	if p.match(token.WERT) {
+		return p.wertStmt()
 	}
 
 	// Start of block statement
@@ -383,6 +392,15 @@ func (p *Parser) printStmt() (types.Stmt, error) {
 	}
 	p.consume(token.END, "Expect 'end' after value.")
 	return types.NewPrint(val), nil
+}
+
+func (p *Parser) wertStmt() (types.Stmt, error) {
+	val, err := p.expression()
+	if err != nil {
+		return nil, err
+	}
+	p.consume(token.END, "Expect 'end' after wert statement.")
+	return types.NewWert(val), nil
 }
 
 func (p *Parser) exprStmt() (types.Stmt, error) {

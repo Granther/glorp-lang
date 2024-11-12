@@ -55,7 +55,9 @@ const (
 	TRUE
 	VAR
 	WHILE
-	GLORPMAIN
+	WERT
+	OHSHIT
+	TRY
 
 	// End of file
 	EOF
