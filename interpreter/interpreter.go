@@ -192,6 +192,17 @@ func (i *Interpreter) VisitReturnStmt(stmt *types.Return) error {
 	return nil // No return val
 }
 
+func (i *Interpreter) VisitWertStmt(stmt *types.Wert) error {
+	if stmt.Val != nil {
+		v, err := i.evaluate(stmt.Val)
+		if err != nil {
+			return err
+		}
+		return glorpError.NewWertErr(v)
+	}
+	return nil
+}
+
 func (i *Interpreter) VisitPrintStmt(stmt *types.Print) error {
 	val, _ := i.evaluate(stmt.Expr)
 	fmt.Println(utils.Stringify(val))
@@ -262,6 +273,20 @@ func (i *Interpreter) VisitIfStmt(stmt *types.If) error {
 	}
 	return nil
 }
+
+func (i *Interpreter) VisitTryStmt(stmt *types.Try) error {
+	err := i.execute(stmt.Attempt)
+	switch err.(type) {
+	case *glorpError.ReturnErr:
+		return err
+	case *glorpError.WertErr:
+		fmt.Println("Got wert in try")
+		fmt.Println("Run ohshit block")
+		i.execute(stmt.Ohshit)
+	}
+	return nil
+}
+
 
 func (i *Interpreter) ExecuteBlock(stmts []types.Stmt, environment types.Environment) error {
 	prev := i.Environment // Save old, for setting back later
@@ -394,7 +419,11 @@ func (i *Interpreter) Interpret(stmts []types.Stmt) {
 		return
 	}
 
-	f.Call(i, []any{})
+	_, err = f.Call(i, []any{})
+	if err != nil {
+		fmt.Println("Error in call")
+		return
+	}
 
 	// x := types.NewCallExpr(f, token.RIGHT_PAREN, []types.Expr{})
 	// x.Accept(i)

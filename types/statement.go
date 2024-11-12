@@ -13,7 +13,7 @@ type Print struct {
 }
 
 type Wert struct {
-	Expr Expr
+	Val Expr
 }
 
 type Var struct {
@@ -46,6 +46,18 @@ type Fun struct {
 type Return struct {
 	Keyword token.Token
 	Val     Expr
+}
+
+type Try struct {
+	Attempt Stmt
+	Ohshit  Stmt
+}
+
+func NewTry(attempt Stmt, ohshit Stmt) Stmt {
+	return &Try{
+		Attempt: attempt,
+		Ohshit:  ohshit,
+	}
 }
 
 func NewReturn(keyword token.Token, val Expr) Stmt {
@@ -93,7 +105,7 @@ func NewPrint(expr Expr) Stmt {
 
 func NewWert(expr Expr) Stmt {
 	return &Wert{
-		Expr: expr,
+		Val: expr,
 	}
 }
 
@@ -140,4 +152,12 @@ func (e *Fun) Accept(visitor StmtVisitor) error {
 
 func (e *Return) Accept(visitor StmtVisitor) error {
 	return visitor.VisitReturnStmt(e)
+}
+
+func (e *Wert) Accept(visitor StmtVisitor) error {
+	return visitor.VisitWertStmt(e)
+}
+
+func (e *Try) Accept(visitor StmtVisitor) error {
+	return visitor.VisitTryStmt(e)
 }

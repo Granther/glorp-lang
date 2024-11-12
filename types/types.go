@@ -29,6 +29,8 @@ type StmtVisitor interface {
 	VisitWhileStmt(stmt *While) error
 	VisitFunStmt(stmt *Fun) error
 	VisitReturnStmt(stmt *Return) error
+	VisitWertStmt(stmt *Wert) error
+	VisitTryStmt(stmt *Try) error
 }
 
 type Visitor interface {

@@ -1,25 +1,16 @@
 glunc mlorp() {
     try {
         var x = splink()
-        print x
-    } ohshit s {
-        print s
-        print "splink failed"
+    } 
+    ohshit {
+        print "Error in try"
     }
 }
 
 glunc splink() {
     print "splink"
-    var x = true
-    print x
-    for x {
-        if x == true {
-            wert "x should NOT be true"
-        }
-    }
+    wert "x should NOT be true"
 }
-
 // All functions can evaluate to a wert if one is werted
 // If it does, then the var a\associated with oshit is assigned the wert val
-
 // Simply, it allows use to raise and pass simple user defined errors

@@ -206,6 +206,10 @@ func (p *Parser) statement() (types.Stmt, error) {
 		return p.wertStmt()
 	}
 
+	if p.match(token.TRY) {
+		return p.tryStmt()
+	}
+
 	// Start of block statement
 	if p.match(token.LEFT_BRACE) {
 		block, err := p.block()
@@ -331,6 +335,32 @@ func (p *Parser) returnStmt() (types.Stmt, error) {
 	return types.NewReturn(keyword, val), nil
 }
 
+func (p *Parser) tryStmt() (types.Stmt, error) {
+	// _, err := p.consume(token.LEFT_, "Expect '(' after 'while'.")
+	// if err != nil {
+	// 	return nil, err
+	// }
+	var ohshit types.Stmt
+
+	attempt, err := p.statement()
+	if err != nil {
+		return nil, err
+	}
+
+	// fmt.Println(string(p.peek().Lexeme))
+	// os.Exit(1)
+
+	if p.match(token.OHSHIT) {
+		fmt.Println("Found ohshit")
+		ohshit, err = p.statement()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return types.NewTry(attempt, ohshit), nil
+}
+
 func (p *Parser) whileStmt() (types.Stmt, error) {
 	// _, err := p.consume(token.LEFT_PAREN, "Expect '(' after 'while'.")
 	// if err != nil {
@@ -356,20 +386,10 @@ func (p *Parser) whileStmt() (types.Stmt, error) {
 }
 
 func (p *Parser) ifStmt() (types.Stmt, error) {
-	// _, err := p.consume(token.LEFT_PAREN, "Expect '(' after 'if'.")
-	// if err != nil {
-	// 	return nil, err
-	// }
-
 	condition, err := p.expression()
 	if err != nil {
 		return nil, err
 	}
-
-	// _, err = p.consume(token.RIGHT_PAREN, "Expect ')' after condition.")
-	// if err != nil {
-	// 	return nil, err
-	// }
 
 	thenBranch, err := p.statement()
 	if err != nil {
@@ -377,7 +397,6 @@ func (p *Parser) ifStmt() (types.Stmt, error) {
 	}
 
 	var finalBranch types.Stmt
-
 	if p.match(token.ELSE) {
 		finalBranch, err = p.statement()
 	}
