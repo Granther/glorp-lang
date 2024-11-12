@@ -18,3 +18,8 @@ glunc splink() {
         }
     }
 }
+
+// All functions can evaluate to a wert if one is werted
+// If it does, then the var a\associated with oshit is assigned the wert val
+
+// Simply, it allows use to raise and pass simple user defined errors
