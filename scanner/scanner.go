@@ -53,6 +53,11 @@ func (s *Scanner) ScanTokens(source string) ([]token.Token, error) {
 		s.scanToken()
 	}
 
+	if s.Tokens[len(s.Tokens)-1].Type != token.END {
+		endToken := token.NewToken(token.END, "", nil, s.Line)
+		s.Tokens = append(s.Tokens, *endToken)
+	}
+
 	// Appends an EOF token at the end
 	newToken := token.NewToken(token.EOF, "", nil, s.Line)
 	s.Tokens = append(s.Tokens, *newToken)
@@ -68,6 +73,8 @@ func (s *Scanner) isAtEnd() bool {
 
 func (s *Scanner) scanToken() {
 	c := s.advance()
+
+	// fmt.Println(string(c))
 
 	switch c {
 	case '(':
@@ -117,7 +124,11 @@ func (s *Scanner) scanToken() {
 	case '/': // Are we doing division or commenting?
 		if s.match('/') { // If next char is /, is comment, read till the end of the line
 			for s.peek() != '\n' && !s.isAtEnd() {
+				// for !s.match('\n') && !s.isAtEnd() {
 				s.advance()
+			}
+			if s.match('\n') {
+				s.Line++
 			}
 		} else { // Otherwise, we are dividing
 			s.addSimpleToken(token.SLASH)
@@ -127,10 +138,6 @@ func (s *Scanner) scanToken() {
 	case '\t':
 		// Ignore whitespace
 	case '\n': // Do nothing but start iterate to the next line
-		// s.addSimpleToken(token.SEMICOLON)
-		// if s.Tokens[len(s.Tokens)-1].Lexeme == "{" {
-		// 	break
-		// }
 		s.addSimpleToken(token.END)
 		s.Line += 1
 		for s.match('\n') {
@@ -152,7 +159,7 @@ func (s *Scanner) scanToken() {
 // Similar to advance but does not consume the character, 'lookahead'
 func (s *Scanner) peek() rune {
 	if s.isAtEnd() {
-		return 'a'
+		return 0
 	}
 	return rune(s.Source[s.Current])
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	glorpError "glorp/error"
 	"glorp/literal"
-	"glorp/native"
 	"glorp/token"
 	"glorp/types"
 )
@@ -125,15 +124,28 @@ func (p *Parser) funDeclaration(kind string) (types.Stmt, error) {
 		return nil, err
 	}
 
-	fun := types.NewFun(name, params, body, p.Environment)
-	tfun, ok := fun.(*types.Fun)
-	if !ok {
-		fmt.Println("Something aint right////")
-	}
-	f := native.NewGlorpFunction(*tfun)
-	p.Environment.Define(name.Lexeme, f)
-	return fun, nil
+	// g, ok := types.NewFun(name, params, body, p.Environment).(*types.Fun)
+	// if !ok {
+	// 	return nil, fmt.Errorf("unable to convert to type fun")
+	// }
+	// glunc := native.NewGlorpFunction(*g)
+	// p.Environment.Define(name.Lexeme, glunc)
+	// return g, nil
+
+	return types.NewFun(name, params, body, p.Environment), nil
+
+	// env := environment.NewEnvironment(p.Environment)
+	// g, ok := types.NewFun(name, params, body, env).(*types.Fun)
+	// if !ok {
+	// 	return nil, fmt.Errorf("unable to convert to type fun")
+	// }
+	// glunc := native.NewGlorpFunction(*g)
+	// env.Define(name.Lexeme, glunc)
+	// return g, nil
 }
+
+// The problem is that all functions are defined within the global scope
+// So we must define each func within the
 
 func (p *Parser) varDeclaration() (types.Stmt, error) {
 	// Consume name only if the next token is an ident
@@ -151,9 +163,16 @@ func (p *Parser) varDeclaration() (types.Stmt, error) {
 		}
 	}
 
-	// If = does not exist in decl, is empty decl, pass empty initial to var decl
-	// p.consume(token.END, "Expect 'end' after variable in declaration.")
+	// v, ok := types.NewVar(name, initializer).(*types.Var)
+	// if !ok {
+	// 	return nil, fmt.Errorf("unable to convert to type var")
+	// }
+	// p.Environment.Define(name.Lexeme, v)
+	// return v, nil
+
 	return types.NewVar(name, initializer), nil
+	// If = does not exist in decl, is empty decl, pass empty initial to var decl
+	// p.consume(token.END, "Expect 'end' after variable in declaration."
 }
 
 // Decide what kind of statement to branch to
@@ -208,6 +227,11 @@ func (p *Parser) block() ([]types.Stmt, error) {
 
 	// The loop has concluded
 	_, err := p.consume(token.RIGHT_BRACE, "Expect '}' after block.")
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = p.consume(token.END, "Expect 'end' after block.")
 	if err != nil {
 		return nil, err
 	}

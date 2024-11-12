@@ -1,0 +1,7 @@
+glunc mlorp() {
+    print "hello"
+    var t = 10
+    print 10
+    print x
+}
+

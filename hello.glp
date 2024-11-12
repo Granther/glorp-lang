@@ -1,16 +1,21 @@
-var x = 10
+mlorp()
+splink()
+var h = 10
 
 glunc mlorp() {
-    print "hello"
-    print "in main"
-    splink()
-    var x = 10
-    print x
+    print "mlorp"
+    print t
 }
 
 glunc splink() {
     print "splink"
 }
 
-print "Im here"
+
+
+
+
+// Hello
+// How are you
+print h
 
