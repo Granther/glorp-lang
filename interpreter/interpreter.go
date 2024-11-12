@@ -373,19 +373,23 @@ func checkNumberOperands(operator token.Token, left any, right any) (float64, fl
 }
 
 func (i *Interpreter) Interpret(stmts []types.Stmt) {
-	fmt.Println(i.Environment.String())
 	g, err := i.Environment.Get("mlorp")
 	if err != nil {
 		glorpError.InterpreterRuntimeError(token.Token{}, "mlorp entry glunction not found.")
 		return
 	}
 
-	f, ok := g.(*types.FunExpr)
+	f, ok := g.(native.Callable)
 	if !ok {
-		fmt.Println("Something")
+		glorpError.InterpreterRuntimeError(token.Token{}, "unable to read mlorp entry glunc to callable.")
+		return
 	}
-	x := types.NewCallExpr(f, token.RIGHT_PAREN, []types.Expr{})
-	x.Accept(i)
+	
+	f.Call(i, []any{})
+
+	
+	// x := types.NewCallExpr(f, token.RIGHT_PAREN, []types.Expr{})
+	// x.Accept(i)
 	// function := native.NewGlorpFunction(x)
 	// function.Call(i, []any{})
 
@@ -409,7 +413,6 @@ func (i *Interpreter) Interpret(stmts []types.Stmt) {
 	// 	return
 	// }
 	// glorpFunc.Call(i, []any{})
-
 }
 
 /*

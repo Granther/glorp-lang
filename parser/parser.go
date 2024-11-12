@@ -4,6 +4,7 @@ import (
 	"fmt"
 	glorpError "glorp/error"
 	"glorp/literal"
+	"glorp/native"
 	"glorp/token"
 	"glorp/types"
 )
@@ -124,9 +125,14 @@ func (p *Parser) funDeclaration(kind string) (types.Stmt, error) {
 		return nil, err
 	}
 
-	fun := types.NewFunExpr(name, params, body)
-	p.Environment.Define(name.Lexeme, fun)
-	return types.NewFun(name, params, body, p.Environment), nil
+	fun := types.NewFun(name, params, body, p.Environment)
+	tfun, ok := fun.(*types.Fun)
+	if !ok {
+		fmt.Println("Something aint right////")
+	}
+	f := native.NewGlorpFunction(*tfun)
+	p.Environment.Define(name.Lexeme, f)
+	return fun, nil
 }
 
 func (p *Parser) varDeclaration() (types.Stmt, error) {
@@ -186,7 +192,6 @@ func (p *Parser) statement() (types.Stmt, error) {
 }
 
 func (p *Parser) block() ([]types.Stmt, error) {
-	fmt.Println("In block")
 	var stmts []types.Stmt
 
 	// While the next tok is not right brace and we are not at the end
