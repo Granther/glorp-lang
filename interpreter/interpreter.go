@@ -173,12 +173,21 @@ func (i *Interpreter) VisitCallExpr(expr *types.CallExpr) (any, error) {
 		glorpError.InterpreterRuntimeError(expr.Paren, fmt.Sprintf("Expected %d args but got %d.", fun.Arity(), len(args)))
 	}
 
-	return fun.Call(i, args)
+	x, err := fun.Call(i, args)
+	if err != nil {
+		fmt.Println("Error in call expr ")
+		switch err.(type) {
+		case *glorpError.WertErr:
+			fmt.Println("Error is wert")
+		}
+	}
+
+	return x, err
 }
 
 func (i *Interpreter) VisitExprStmt(stmt *types.Expression) error {
-	i.evaluate(stmt.Expr)
-	return nil
+	_, err := i.evaluate(stmt.Expr)
+	return err
 }
 
 func (i *Interpreter) VisitReturnStmt(stmt *types.Return) error {
@@ -281,7 +290,6 @@ func (i *Interpreter) VisitTryStmt(stmt *types.Try) error {
 		return err
 	case *glorpError.WertErr:
 		fmt.Println("Got wert in try")
-		fmt.Println("Run ohshit block")
 		i.execute(stmt.Ohshit)
 	}
 	return nil
@@ -294,6 +302,7 @@ func (i *Interpreter) ExecuteBlock(stmts []types.Stmt, environment types.Environ
 	// Change to new block and execute from that env
 	i.Environment = environment
 	for _, stmt := range stmts {
+		// If a stmt is wert, 
 		err := i.execute(stmt)
 		if err != nil {
 			return err

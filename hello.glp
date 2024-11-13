@@ -1,11 +1,21 @@
 glunc mlorp() {
-    splink()
-    print "huhh"
+    print "bef"
+    try {
+       splink()
+    }
+    ohshit {
+        print "No worky"
+    }
+    print "aft"
 }
 
 glunc splink() {
+    print "Huh"
     wert "x should NOT be true"
+    print "splink"
 }
 // All functions can evaluate to a wert if one is werted
 // If it does, then the var a\associated with oshit is assigned the wert val
 // Simply, it allows use to raise and pass simple user defined errors
+// A function is called, if the execution block returns an error that is of type werterror
+// we are looking at a wert, 
