@@ -345,7 +345,6 @@ func (p *Parser) tryStmt() (types.Stmt, error) {
 	}
 
 	if p.match(token.OHSHIT) {
-		if p.check(token.IDENTIFIER) { fmt.Println("See ident") }
 		wert = p.advance()
 
 		ohshit, err = p.statement()
@@ -353,7 +352,7 @@ func (p *Parser) tryStmt() (types.Stmt, error) {
 			return nil, err
 		}
 	}
-	
+
 	return types.NewTry(attempt, ohshit, wert), nil
 }
 

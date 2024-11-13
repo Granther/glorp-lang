@@ -291,9 +291,9 @@ func (i *Interpreter) VisitTryStmt(stmt *types.Try) error {
 		wertVal, _ := err.(*glorpError.WertErr)
 		newVar := types.NewVar(stmt.OhshitTok, types.NewLiteralExpr(literal.NewLiteral(wertVal)))
 		block := types.NewBlock([]types.Stmt{newVar, stmt.Ohshit})
-		i.execute(block)
+		err = i.execute(block)
 	}
-	return nil
+	return err
 }
 
 

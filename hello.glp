@@ -18,6 +18,7 @@ glunc splink() {
         print "E is wert, werting"
         wert "huh"
     }
+    print "got herRE"
 }
 
 glunc huh() {
