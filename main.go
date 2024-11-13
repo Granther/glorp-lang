@@ -77,10 +77,11 @@ func (g *Glorp) Run(source string) error {
 		return err
 	}
 
-	// for _, x := range tokens {
-	// 	fmt.Printf("Type: %T: ", x)
-	// }
+	for _, x := range tokens {
+		fmt.Printf(x.Lexeme)
+	}
 
+	os.Exit(1)
 	// Parse tokens to expressions
 	statements := g.Parser.Parse(tokens)
 

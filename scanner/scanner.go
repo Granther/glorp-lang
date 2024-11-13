@@ -88,6 +88,11 @@ func (s *Scanner) scanToken() {
 		s.addSimpleToken(token.LEFT_BRACE)
 	case '}':
 		s.addSimpleToken(token.RIGHT_BRACE)
+		if !s.match('\n') {
+			fmt.Println(string(s.peek()))
+			// os.Exit(1)
+			s.addSimpleToken(token.END)
+		}
 	case ',':
 		s.addSimpleToken(token.COMMA)
 	case '.':

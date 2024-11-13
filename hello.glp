@@ -2,7 +2,7 @@ glunc mlorp() {
     print "bef"
     try {
        splink()
-    } ohshit r {
+    }ohshit r {
         print "caught splik wert"
         print r
     }
