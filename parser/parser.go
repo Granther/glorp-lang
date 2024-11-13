@@ -337,6 +337,7 @@ func (p *Parser) returnStmt() (types.Stmt, error) {
 
 func (p *Parser) tryStmt() (types.Stmt, error) {
 	var ohshit types.Stmt
+	var wert token.Token
 
 	attempt, err := p.statement()
 	if err != nil {
@@ -344,13 +345,16 @@ func (p *Parser) tryStmt() (types.Stmt, error) {
 	}
 
 	if p.match(token.OHSHIT) {
+		if p.check(token.IDENTIFIER) { fmt.Println("See ident") }
+		wert = p.advance()
+
 		ohshit, err = p.statement()
 		if err != nil {
 			return nil, err
 		}
 	}
-
-	return types.NewTry(attempt, ohshit), nil
+	
+	return types.NewTry(attempt, ohshit, wert), nil
 }
 
 func (p *Parser) whileStmt() (types.Stmt, error) {

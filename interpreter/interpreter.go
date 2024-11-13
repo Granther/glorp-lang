@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"glorp/environment"
 	glorpError "glorp/error"
+	"glorp/literal"
 	"glorp/native"
 	"glorp/token"
 	"glorp/types"
@@ -175,10 +176,8 @@ func (i *Interpreter) VisitCallExpr(expr *types.CallExpr) (any, error) {
 
 	x, err := fun.Call(i, args)
 	if err != nil {
-		fmt.Println("Error in call expr ")
 		switch err.(type) {
 		case *glorpError.WertErr:
-			fmt.Println("Error is wert")
 		}
 	}
 
@@ -289,8 +288,10 @@ func (i *Interpreter) VisitTryStmt(stmt *types.Try) error {
 	case *glorpError.ReturnErr:
 		return err
 	case *glorpError.WertErr:
-		fmt.Println("Got wert in try")
-		i.execute(stmt.Ohshit)
+		wertVal, _ := err.(*glorpError.WertErr)
+		newVar := types.NewVar(stmt.OhshitTok, types.NewLiteralExpr(literal.NewLiteral(wertVal)))
+		block := types.NewBlock([]types.Stmt{newVar, stmt.Ohshit})
+		i.execute(block)
 	}
 	return nil
 }
