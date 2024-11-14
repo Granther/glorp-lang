@@ -50,15 +50,15 @@ type Return struct {
 
 type Try struct {
 	Attempt   Stmt
-	Ohshit    Stmt
-	OhshitTok token.Token
+	Woops    Stmt
+	WoopsTok token.Token
 }
 
-func NewTry(attempt Stmt, ohshit Stmt, ohshitTok token.Token) Stmt {
+func NewTry(attempt Stmt, woops Stmt, woopsTok token.Token) Stmt {
 	return &Try{
 		Attempt:   attempt,
-		Ohshit:    ohshit,
-		OhshitTok: ohshitTok,
+		Woops:    woops,
+		WoopsTok: woopsTok,
 	}
 }
 

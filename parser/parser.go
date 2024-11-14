@@ -338,7 +338,7 @@ func (p *Parser) returnStmt() (types.Stmt, error) {
 }
 
 func (p *Parser) tryStmt() (types.Stmt, error) {
-	var ohshit types.Stmt
+	var woops types.Stmt
 	var wert token.Token
 
 	attempt, err := p.statement()
@@ -346,16 +346,16 @@ func (p *Parser) tryStmt() (types.Stmt, error) {
 		return nil, err
 	}
 
-	if p.match(token.OHSHIT) {
+	if p.match(token.WOOPS) {
 		wert = p.advance()
 
-		ohshit, err = p.statement()
+		woops, err = p.statement()
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return types.NewTry(attempt, ohshit, wert), nil
+	return types.NewTry(attempt, woops, wert), nil
 }
 
 func (p *Parser) whileStmt() (types.Stmt, error) {

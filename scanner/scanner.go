@@ -38,7 +38,7 @@ func NewScanner() *Scanner {
 	keywords["while"] = token.WHILE
 	keywords["wert"] = token.WERT
 	keywords["try"] = token.TRY
-	keywords["ohshit"] = token.OHSHIT
+	keywords["woops"] = token.WOOPS
 
 	leftOperators := make(map[rune]token.TokenType)
 	leftOperators['+'] = token.PLUS

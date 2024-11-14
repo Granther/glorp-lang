@@ -56,7 +56,7 @@ const (
 	VAR
 	WHILE
 	WERT
-	OHSHIT
+	WOOPS
 	TRY
 
 	// End of file
@@ -100,7 +100,7 @@ var TokenTypeNames = map[TokenType]string{
 	PRINT:         "PRINT",
 	RETURN:        "RETURN",
 	WERT:          "WERT",
-	OHSHIT:        "OHSHIT",
+	WOOPS:        "WOOPS",
 	TRY:           "TRY",
 	VAR:           "VAR",
 }
