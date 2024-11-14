@@ -9,6 +9,11 @@ type Interpreter interface {
 	Interpret(stmts []Stmt)
 }
 
+type Parser interface {
+	GetHadError() bool
+	Parse(tokens []token.Token) []Stmt
+}
+
 type Environment interface {
 	Get(name string) (any, error)
 	Define(name string, val any)

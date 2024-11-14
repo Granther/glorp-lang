@@ -35,6 +35,7 @@ import (
 // We syncronize back up with the unexplored par of the program that isnt directly affetced by the error
 // This means we throw away all tokens on that line
 type Parser struct {
+	HadError    bool
 	Tokens      []token.Token
 	Environment types.Environment
 	Current     int
@@ -42,6 +43,7 @@ type Parser struct {
 
 func NewParser(e types.Environment) *Parser {
 	return &Parser{
+		HadError:    false,
 		Current:     0,
 		Environment: e,
 	}
@@ -55,6 +57,7 @@ func (p *Parser) Parse(tokens []token.Token) []types.Stmt {
 		p.match(token.END)
 		decl, err := p.declaration()
 		if err != nil {
+			p.HadError = true
 			fmt.Println("Error in decl, syncronizing...")
 			p.syncronize()
 			continue
@@ -394,7 +397,10 @@ func (p *Parser) printStmt() (types.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	p.consume(token.END, "Expect 'end' after value.")
+	_, err = p.consume(token.END, "Expect 'end' after value.")
+	if err != nil {
+		return nil, err
+	}
 	return types.NewPrint(val), nil
 }
 
@@ -403,7 +409,10 @@ func (p *Parser) wertStmt() (types.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	p.consume(token.END, "Expect 'end' after wert statement.")
+	_, err = p.consume(token.END, "Expect 'end' after wert statement.")
+	if err != nil {
+		return nil, err
+	}
 	return types.NewWert(val), nil
 }
 
@@ -412,7 +421,10 @@ func (p *Parser) exprStmt() (types.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	p.consume(token.END, "Expect 'end' after value.")
+	_, err = p.consume(token.END, "Expect 'end' after value.")
+	if err != nil {
+		return nil, err
+	}
 	return types.NewExpression(val), nil
 }
 
@@ -608,10 +620,11 @@ func (p *Parser) finishCall(callee types.Expr) (types.Expr, error) {
 	}
 
 	paren, err := p.consume(token.RIGHT_PAREN, "Expect ')' after arguments.")
+	// fmt.Println(paren.Lexeme)
+	// os.Exit(1)
 	if err != nil {
 		return nil, err
 	}
-
 	// Finally perform func call
 	return types.NewCallExpr(callee, paren, args), nil
 }
@@ -643,7 +656,10 @@ func (p *Parser) primary() (types.Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		p.consume(token.RIGHT_PAREN, "Expect ')' after expression.")
+		_, err = p.consume(token.RIGHT_PAREN, "Expect ')' after expression.")
+		if err != nil {
+			return nil, err
+		}
 		return types.NewGroupingExpr(expr), nil
 	}
 
@@ -659,7 +675,7 @@ func (p *Parser) consume(tokType token.TokenType, message string) (token.Token, 
 	} // If next token is passed type, consume it and pass the previous token
 
 	glorpError.ParserError(p.peek(), message)
-	return token.Token{}, fmt.Errorf("message")
+	return token.Token{}, fmt.Errorf(message)
 }
 
 // Discards tokens until it has found the end of a statement
@@ -728,6 +744,10 @@ func (p *Parser) advance() token.Token { // Returns token that is consumed, s.Cu
 		p.Current += 1
 	} // Consume as long as we are not at the end
 	return p.previous()
+}
+
+func (p *Parser) GetHadError() bool {
+	return p.HadError
 }
 
 // Got or to work

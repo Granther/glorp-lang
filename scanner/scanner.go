@@ -46,9 +46,6 @@ func NewScanner() *Scanner {
 	leftOperators['*'] = token.STAR
 	leftOperators['/'] = token.SLASH
 	leftOperators['='] = token.EQUAL
-	leftOperators['-'] = token.MINUS
-	leftOperators['+'] = token.PLUS
-	leftOperators['-'] = token.MINUS
 
 	return &Scanner{
 		Tokens:        []token.Token{},

@@ -81,23 +81,20 @@ func (g *Glorp) Run(source string) error {
 		fmt.Println(token.TokenTypeNames[x.Type])
 	}
 
-	// os.Exit(1)
-	// Parse tokens to expressions
 	statements := g.Parser.Parse(tokens)
 
-	if g.HadError {
-		fmt.Println("Error encountered in Run")
+	if g.Parser.GetHadError() {
+		fmt.Println("Error encountered in Parser, stopping...")
 		return nil
 	}
+
+	g.Interpreter.Interpret(statements)
 
 	if g.Interpreter.GetHadRuntimeError() {
 		fmt.Println("Runtime Error encountered in Run")
 		return nil
 	}
 
-	// // fmt.Println(ast.NewAstPrinter().Print(expr))
-
-	g.Interpreter.Interpret(statements)
 	return nil
 }
 

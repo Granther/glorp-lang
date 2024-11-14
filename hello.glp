@@ -1,20 +1,7 @@
 
 
 glunc mlorp() {
-    try { var x123 = 2; print 10; test() }       
-    ohshit s { 
-        print s
-    }
-
-    test()
-
-    var y = true
-    if !y {
-        print "I'm in if"
-    } 
-    else {
-        print "not"
-    }
+    test(
 }
 
 glunc test() {
