@@ -108,6 +108,13 @@ func (i *Interpreter) VisitBinaryExpr(expr *types.BinaryExpr) (any, error) {
 		} else if reflect.TypeOf(left).Kind().String() == "string" && reflect.TypeOf(right).Kind().String() == "string" {
 			return fmt.Sprintf("%v", left) + fmt.Sprintf("%v", right), nil // If they are both strings then concat
 		}
+	case token.PLUS_EQUAL:
+		l, r, ok := utils.ConvFloat(left, right) 
+		if ok {
+			return l + r, nil
+		} else if reflect.TypeOf(left).Kind().String() == "string" && reflect.TypeOf(right).Kind().String() == "string" {
+			return fmt.Sprintf("%v", left) + fmt.Sprintf("%v", right), nil // If they are both strings then concat
+		}
 	}
 
 	return utils.Parenthesize(i, expr.Operator.Lexeme, expr.Left, expr.Right)
@@ -431,9 +438,45 @@ func (i *Interpreter) Interpret(stmts []types.Stmt) {
 
 	_, err = f.Call(i, []any{})
 	if err != nil {
-		fmt.Println("Error in call")
+		glorpError.InterpreterRuntimeError(token.Token{}, "uncaught wert arrived in global scope")
 		return
 	}
+}
+
+func (i *Interpreter) execute(stmt types.Stmt) error {
+	return stmt.Accept(i)
+}
+
+func (i *Interpreter) GetGlobals() types.Environment {
+	return i.Environment
+}
+
+func (i *Interpreter) GetHadRuntimeError() bool {
+	return i.HadRuntimeError
+}
+
+// Variable declarations are statements, because we are doing something
+// Now we add a declaration grammar rule to out syntax
+// Allow for declaring var, funcs, classes
+// Can fall through to a statement
+
+// Scoping
+// Create an entirely new environment inside each scope block
+// We can discard this entire env and not be afraid of deleting global vars of the same name
+// Shadowing
+// When 2 vars (maybe global and local) have the same name. The local var ctypess a
+// 'shadow' over the global one, hiding it
+// Environment chaining
+// Each environment has link to the env above, all ending in the global scope
+// We walk up this chain when looks for vars
+
+// Blocks
+// A possibly empty series of statements for decls in curly braces
+// A block is a statement, can appear anywhere a statement is allowed
+
+// If we find a return statement, go up to main
+
+// OLD
 
 	// x := types.NewCallExpr(f, token.RIGHT_PAREN, []types.Expr{})
 	// x.Accept(i)
@@ -475,37 +518,3 @@ func (i *Interpreter) Interpret(stmts []types.Stmt) {
 	//         i.execute(stmt)
 	//     }
 	// }
-}
-
-func (i *Interpreter) execute(stmt types.Stmt) error {
-	return stmt.Accept(i)
-}
-
-func (i *Interpreter) GetGlobals() types.Environment {
-	return i.Environment
-}
-
-func (i *Interpreter) GetHadRuntimeError() bool {
-	return i.HadRuntimeError
-}
-
-// Variable declarations are statements, because we are doing something
-// Now we add a declaration grammar rule to out syntax
-// Allow for declaring var, funcs, classes
-// Can fall through to a statement
-
-// Scoping
-// Create an entirely new environment inside each scope block
-// We can discard this entire env and not be afraid of deleting global vars of the same name
-// Shadowing
-// When 2 vars (maybe global and local) have the same name. The local var ctypess a
-// 'shadow' over the global one, hiding it
-// Environment chaining
-// Each environment has link to the env above, all ending in the global scope
-// We walk up this chain when looks for vars
-
-// Blocks
-// A possibly empty series of statements for decls in curly braces
-// A block is a statement, can appear anywhere a statement is allowed
-
-// If we find a return statement, go up to main

@@ -1,11 +1,11 @@
 
 
 glunc mlorp() {
-    try {
-        wert "help"
-    } woops s {
-        print s
-    }
+    var x = false
+    var t = 1
+    t += 10
+    t = t + 10
+    print t
 }
 
 glunc test() {

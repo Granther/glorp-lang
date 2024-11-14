@@ -256,17 +256,13 @@ func (p *Parser) block() ([]types.Stmt, error) {
 
 func (p *Parser) forStmt() (types.Stmt, error) {
 	var err error
-	_, err = p.consume(token.LEFT_PAREN, "Expect '(' after 'for'.")
-	if err != nil {
-		return nil, err
-	}
 
 	// Dont forget
 	// Match advances 'consumes' the next token if matched
 	// Check returns wether the next is it or not simply
 
 	var initializer types.Stmt
-	if p.match(token.SEMICOLON) { // Just a semicolon, this is directly following the opening (
+	if p.match(token.END) { // Just a semicolon, this is directly following the opening (
 		initializer = nil
 	} else if p.match(token.VAR) { // Init is a new var, x := 1
 		if initializer, err = p.varDeclaration(); err != nil {
@@ -279,13 +275,13 @@ func (p *Parser) forStmt() (types.Stmt, error) {
 	}
 
 	var condition types.Expr = nil
-	if !p.check(token.SEMICOLON) { // See if next token is not semicolon, dont consume it
+	if !p.check(token.END) { // See if next token is not semicolon, dont consume it
 		if condition, err = p.expression(); err != nil {
 			return nil, err // If not, parse expression, not matter what ';' should be at end
 		}
 	}
 	// Consume now
-	_, err = p.consume(token.SEMICOLON, "Expect ';' after loop condition.")
+	_, err = p.consume(token.END, "Expect ';' after loop condition.")
 	if err != nil {
 		return nil, err
 	}
@@ -296,10 +292,6 @@ func (p *Parser) forStmt() (types.Stmt, error) {
 		if increment, err = p.expression(); err != nil {
 			return nil, err
 		}
-	}
-	_, err = p.consume(token.RIGHT_PAREN, "Expect ')' after 'for' clauses.")
-	if err != nil {
-		return nil, err
 	}
 
 	var body types.Stmt = nil

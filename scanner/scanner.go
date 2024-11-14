@@ -113,7 +113,13 @@ func (s *Scanner) scanToken() {
 	case '-':
 		s.addSimpleToken(token.MINUS)
 	case '+':
-		s.addSimpleToken(token.PLUS)
+		if s.match('=') {
+			s.addSimpleToken(token.PLUS_EQUAL)
+		} else if s.match('+') {
+			s.addSimpleToken(token.PLUS_PLUS)
+		} else {
+			s.addSimpleToken(token.PLUS)
+		}
 	case ';':
 		s.addSimpleToken(token.END)
 	case '*':
