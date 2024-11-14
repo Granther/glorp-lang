@@ -7,6 +7,7 @@ import (
 	"glorp/interpreter"
 	"glorp/parser"
 	"glorp/scanner"
+	"glorp/token"
 	"glorp/types"
 	"os"
 	"path/filepath"
@@ -78,10 +79,10 @@ func (g *Glorp) Run(source string) error {
 	}
 
 	for _, x := range tokens {
-		fmt.Printf(x.Lexeme)
+		fmt.Println(token.TokenTypeNames[x.Type])
 	}
 
-	os.Exit(1)
+	//os.Exit(1)
 	// Parse tokens to expressions
 	statements := g.Parser.Parse(tokens)
 

@@ -9,3 +9,6 @@ glunc mlorp() {
         var x = splink()
         print x
     }
+
+// What does a basic parser that does not use semicolons need?
+// If stmt ends in '}' add end tok

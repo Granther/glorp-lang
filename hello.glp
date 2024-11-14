@@ -1,28 +1,7 @@
 glunc mlorp() {
-    print "bef"
     try {
-       splink()
-    }ohshit r {
-        print "caught splik wert"
-        print r
-    }
-
-    print "hh"
-    print "aft"
-}
-
-glunc splink() {
-    try {
-        huh()
-    } 
-    ohshit e {
-        print "E is wert, werting"
         wert "huh"
+    }  ohshit s {
+        print "shsh"
     }
-    print "got herRE"
-}
-
-glunc huh() {
-    print "in huh"
-    wert "huh is errored"
 }

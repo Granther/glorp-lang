@@ -88,10 +88,16 @@ func (s *Scanner) scanToken() {
 		s.addSimpleToken(token.LEFT_BRACE)
 	case '}':
 		s.addSimpleToken(token.RIGHT_BRACE)
-		if !s.match('\n') {
-			fmt.Println(string(s.peek()))
-			// os.Exit(1)
+		for s.peek() == ' ' {
+			fmt.Println("See space")
+			s.advance()
+		}
+		// for s.match(' ') {} 
+		if s.peek() != '\n' {
+			fmt.Println("Adding token")
 			s.addSimpleToken(token.END)
+			// s.advance()
+			fmt.Println(string(s.peek()))
 		}
 	case ',':
 		s.addSimpleToken(token.COMMA)
@@ -170,6 +176,10 @@ func (s *Scanner) peek() rune {
 		return 0
 	}
 	return rune(s.Source[s.Current])
+}
+
+func (s *Scanner) prev() rune {
+	return rune(s.Source[s.Current-1])
 }
 
 func (s *Scanner) peekNext() rune {

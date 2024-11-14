@@ -63,6 +63,47 @@ const (
 	EOF
 )
 
+var TokenTypeNames = map[TokenType]string{
+	LEFT_PAREN:    "LEFT_PAREN",
+	RIGHT_PAREN:   "RIGHT_PAREN",
+	LEFT_BRACE:    "LEFT_BRACE",
+	RIGHT_BRACE:   "RIGHT_BRACE",
+	COMMA:         "COMMA",
+	DOT:           "DOT",
+	MINUS:         "MINUS",
+	PLUS:          "PLUS",
+	SEMICOLON:     "SEMICOLON",
+	SLASH:         "SLASH",
+	STAR:          "STAR",
+	END:           "END",
+	SPACE:         "SPACE",
+	BANG:          "BANG",
+	BANG_EQUAL:    "BANG_EQUAL",
+	EQUAL:         "EQUAL",
+	EQUAL_EQUAL:   "EQUAL_EQUAL",
+	GREATER:       "GREATER",
+	GREATER_EQUAL: "GREATER_EQUAL",
+	LESS:          "LESS",
+	LESS_EQUAL:    "LESS_EQUAL",
+	IDENTIFIER:    "IDENTIFIER",
+	STRING:        "STRING",
+	NUMBER:        "NUMBER",
+	AND:           "AND",
+	CLASS:         "CLASS",
+	ELSE:          "ELSE",
+	FALSE:         "FALSE",
+	GLUNC:         "GLUNC",
+	FOR:           "FOR",
+	IF:            "IF",
+	NIL:           "NIL",
+	OR:            "OR",
+	PRINT:         "PRINT",
+	RETURN:        "RETURN",
+	WERT:          "WERT",
+	OHSHIT:        "OHSHIT",
+	TRY:           "TRY",
+}
+
 type Token struct {
 	Type    TokenType
 	Lexeme  string
