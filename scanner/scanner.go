@@ -96,6 +96,9 @@ func (s *Scanner) scanToken() {
 		s.addSimpleToken(token.LEFT_PAREN)
 	case ')':
 		s.addSimpleToken(token.RIGHT_PAREN)
+		if s.futureChar() == '}' {
+			s.addSimpleToken(token.END)
+		}
 	case '{':
 		s.addSimpleToken(token.LEFT_BRACE)
 	case '}':
@@ -115,7 +118,7 @@ func (s *Scanner) scanToken() {
 	case '+':
 		s.addSimpleToken(token.PLUS)
 	case ';':
-		s.addSimpleToken(token.SEMICOLON)
+		s.addSimpleToken(token.END)
 	case '*':
 		s.addSimpleToken(token.STAR)
 	case '=':
@@ -245,7 +248,7 @@ func (s *Scanner) string() {
 	lit := literal.NewLiteral(val)
 	s.addToken(token.STRING, lit)
 
-	s.attemptEarlyEnd()
+	// s.attemptEarlyEnd()
 }
 
 // Consumes next character of source line and returns it
@@ -306,7 +309,7 @@ func (s *Scanner) number() {
 	f64Literal := literal.NewLiteral(f64)
 	s.addToken(token.NUMBER, f64Literal)
 
-	s.attemptEarlyEnd()
+	// s.attemptEarlyEnd()
 }
 
 func (s *Scanner) identifier() {
@@ -321,13 +324,12 @@ func (s *Scanner) identifier() {
 	if !ok { // If it is not a recognized keyword, label it as ident
 		s.addSimpleToken(token.IDENTIFIER)
 		return
-	} else {
-		fmt.Print("Hello")
 	}
 
 	s.addSimpleToken(tokType)
 
 	if s.futureChar() == '}' {
+		fmt.Println("future char")
 		s.addSimpleToken(token.END)
 	}
 }

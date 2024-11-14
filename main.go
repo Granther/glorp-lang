@@ -72,7 +72,6 @@ func (g *Glorp) Repl() error {
 }
 
 func (g *Glorp) Run(source string) error {
-
 	tokens, err := g.Scanner.ScanTokens(source)
 	if err != nil {
 		return err
@@ -82,7 +81,7 @@ func (g *Glorp) Run(source string) error {
 		fmt.Println(token.TokenTypeNames[x.Type])
 	}
 
-	//os.Exit(1)
+	// os.Exit(1)
 	// Parse tokens to expressions
 	statements := g.Parser.Parse(tokens)
 

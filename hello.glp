@@ -1,11 +1,12 @@
+
+
 glunc mlorp() {
-    try {
-        var x = 2 * 10
-        print x
-    } 
+    try { var x123 = 2; print 10; test() }       
     ohshit s { 
-        print "shsh" 
+        print s
     }
+
+    test()
 
     var y = true
     if !y {
@@ -14,4 +15,10 @@ glunc mlorp() {
     else {
         print "not"
     }
+}
+
+glunc test() {
+    print "before"
+    wert "test errir"
+    print "after"
 }
