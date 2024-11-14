@@ -2,6 +2,8 @@
 
 glunc mlorp() {
     test(
+    var t = 10
+    var y = 10
 }
 
 glunc test() {

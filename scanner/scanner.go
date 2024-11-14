@@ -264,8 +264,10 @@ func (s *Scanner) addSimpleToken(tokType token.TokenType) {
 }
 
 func (s *Scanner) addToken(tokType token.TokenType, literal *literal.Literal) {
-	text := fmt.Sprintf("%v", s.Source[s.Start:s.Current])
-	newToken := token.NewToken(tokType, text, literal, s.Line)
+	text := s.Source[s.Start:s.Current]
+	escapedText := strconv.QuoteToASCII(text)
+	escapedText = escapedText[1 : len(escapedText)-1] // Remove the surrounding quotes added by QuoteToASCII
+	newToken := token.NewToken(tokType, escapedText, literal, s.Line)
 	s.Tokens = append(s.Tokens, *newToken)
 }
 

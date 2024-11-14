@@ -7,7 +7,6 @@ import (
 	"glorp/interpreter"
 	"glorp/parser"
 	"glorp/scanner"
-	"glorp/token"
 	"glorp/types"
 	"os"
 	"path/filepath"
@@ -16,7 +15,7 @@ import (
 type Glorp struct {
 	HadError    bool
 	Scanner     *scanner.Scanner
-	Parser      *parser.Parser
+	Parser      types.Parser
 	Interpreter types.Interpreter
 	Environment types.Environment
 }
@@ -75,10 +74,6 @@ func (g *Glorp) Run(source string) error {
 	tokens, err := g.Scanner.ScanTokens(source)
 	if err != nil {
 		return err
-	}
-
-	for _, x := range tokens {
-		fmt.Println(token.TokenTypeNames[x.Type])
 	}
 
 	statements := g.Parser.Parse(tokens)

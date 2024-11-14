@@ -58,7 +58,6 @@ func (p *Parser) Parse(tokens []token.Token) []types.Stmt {
 		decl, err := p.declaration()
 		if err != nil {
 			p.HadError = true
-			fmt.Println("Error in decl, syncronizing...")
 			p.syncronize()
 			continue
 		}
@@ -683,6 +682,11 @@ func (p *Parser) consume(tokType token.TokenType, message string) (token.Token, 
 // Hopefully all tokens that would have been affected by an earlier error are discorded
 func (p *Parser) syncronize() {
 	p.advance() // Consume a token
+
+	// for !p.isAtEnd() && p.peek().Type != token.RIGHT_BRACE {
+	// 	p.advance()
+	// 	//fmt.Println(p.peek().Lexeme)
+	// }
 
 	for !p.isAtEnd() {
 		if p.previous().Type == token.END {
