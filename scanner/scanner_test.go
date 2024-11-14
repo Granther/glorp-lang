@@ -57,3 +57,13 @@ func TestNumber(t *testing.T) {
 		t.Errorf("Expected token to be lex of 20.4, got %s", scanner.Tokens[1].Lexeme)
 	}
 }
+
+func TestFutureChar(t *testing.T) {
+	source := "     }"
+	scanner := NewScanner()
+	scanner.Source = source
+
+	if scanner.futureChar() != '}' {
+		t.Errorf("Expected future of '}', got %v", scanner.futureChar())
+	}
+}

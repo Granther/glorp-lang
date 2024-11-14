@@ -102,6 +102,7 @@ var TokenTypeNames = map[TokenType]string{
 	WERT:          "WERT",
 	OHSHIT:        "OHSHIT",
 	TRY:           "TRY",
+	VAR:           "VAR",
 }
 
 type Token struct {

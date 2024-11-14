@@ -9,12 +9,13 @@ import (
 )
 
 type Scanner struct {
-	Source   string
-	Tokens   []token.Token
-	Start    int // Points to first lexeme being scanner
-	Current  int // Character currently being considered
-	Line     int // The source line that Current is on
-	Keywords map[string]token.TokenType
+	Source        string
+	Tokens        []token.Token
+	Start         int // Points to first lexeme being scanner
+	Current       int // Character currently being considered
+	Line          int // The source line that Current is on
+	Keywords      map[string]token.TokenType
+	LeftOperators map[rune]token.TokenType
 }
 
 func NewScanner() *Scanner {
@@ -39,12 +40,23 @@ func NewScanner() *Scanner {
 	keywords["try"] = token.TRY
 	keywords["ohshit"] = token.OHSHIT
 
+	leftOperators := make(map[rune]token.TokenType)
+	leftOperators['+'] = token.PLUS
+	leftOperators['-'] = token.MINUS
+	leftOperators['*'] = token.STAR
+	leftOperators['/'] = token.SLASH
+	leftOperators['='] = token.EQUAL
+	leftOperators['-'] = token.MINUS
+	leftOperators['+'] = token.PLUS
+	leftOperators['-'] = token.MINUS
+
 	return &Scanner{
-		Tokens:   []token.Token{},
-		Start:    0,
-		Current:  0,
-		Line:     1,
-		Keywords: keywords,
+		Tokens:        []token.Token{},
+		Start:         0,
+		Current:       0,
+		Line:          1,
+		Keywords:      keywords,
+		LeftOperators: leftOperators,
 	}
 }
 
@@ -89,15 +101,10 @@ func (s *Scanner) scanToken() {
 	case '}':
 		s.addSimpleToken(token.RIGHT_BRACE)
 		for s.peek() == ' ' {
-			fmt.Println("See space")
 			s.advance()
 		}
-		// for s.match(' ') {} 
 		if s.peek() != '\n' {
-			fmt.Println("Adding token")
 			s.addSimpleToken(token.END)
-			// s.advance()
-			fmt.Println(string(s.peek()))
 		}
 	case ',':
 		s.addSimpleToken(token.COMMA)
@@ -178,6 +185,31 @@ func (s *Scanner) peek() rune {
 	return rune(s.Source[s.Current])
 }
 
+func (s *Scanner) nextIsOper() bool {
+	if s.peek() == ' ' {
+		s.advance()
+	}
+	_, ok := s.LeftOperators[s.peek()]
+	return ok
+}
+
+func (s *Scanner) attemptEarlyEnd() {
+	if !s.nextIsOper() {
+		s.addSimpleToken(token.END)
+		s.match('\n')
+	}
+}
+
+func (s *Scanner) futureChar() rune {
+	cur := s.Current
+	for s.peek() == ' ' {
+		s.Current++
+	}
+	p := s.peek()
+	s.Current = cur
+	return p
+}
+
 func (s *Scanner) prev() rune {
 	return rune(s.Source[s.Current-1])
 }
@@ -212,6 +244,8 @@ func (s *Scanner) string() {
 	val := s.Source[s.Start+1 : s.Current-1]
 	lit := literal.NewLiteral(val)
 	s.addToken(token.STRING, lit)
+
+	s.attemptEarlyEnd()
 }
 
 // Consumes next character of source line and returns it
@@ -271,6 +305,8 @@ func (s *Scanner) number() {
 	f64, _ := strconv.ParseFloat(s.Source[s.Start:s.Current], 32)
 	f64Literal := literal.NewLiteral(f64)
 	s.addToken(token.NUMBER, f64Literal)
+
+	s.attemptEarlyEnd()
 }
 
 func (s *Scanner) identifier() {
@@ -285,9 +321,15 @@ func (s *Scanner) identifier() {
 	if !ok { // If it is not a recognized keyword, label it as ident
 		s.addSimpleToken(token.IDENTIFIER)
 		return
+	} else {
+		fmt.Print("Hello")
 	}
 
 	s.addSimpleToken(tokType)
+
+	if s.futureChar() == '}' {
+		s.addSimpleToken(token.END)
+	}
 }
 
 // Check and see if a byte char is alpha numeric

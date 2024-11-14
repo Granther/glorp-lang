@@ -1,7 +1,17 @@
 glunc mlorp() {
     try {
-        wert "huh"
-    }  ohshit s {
-        print "shsh"
+        var x = 2 * 10
+        print x
+    } 
+    ohshit s { 
+        print "shsh" 
+    }
+
+    var y = true
+    if !y {
+        print "I'm in if"
+    } 
+    else {
+        print "not"
     }
 }
