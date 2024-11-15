@@ -36,6 +36,8 @@ const (
 	PLUS_PLUS
 	MINUS_MINUS
 	MINUS_EQUAL
+	STAR_EQUAL
+	SLASH_EQUAL
 
 	// Literals.
 	IDENTIFIER
@@ -112,6 +114,8 @@ var TokenTypeNames = map[TokenType]string{
 	PLUS_PLUS:     "PLUS_PLUS",
 	MINUS_MINUS:   "MINUS_MINUS",
 	MINUS_EQUAL:   "MINUS_EQUAL",
+	STAR_EQUAL:    "STAR_MINUS",
+	SLASH_EQUAL:   "SLASH_EQUAL",
 }
 
 type Token struct {

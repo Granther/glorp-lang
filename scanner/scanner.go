@@ -129,7 +129,11 @@ func (s *Scanner) scanToken() {
 	case ';':
 		s.addSimpleToken(token.END)
 	case '*':
-		s.addSimpleToken(token.STAR)
+		if s.match('=') {
+			s.addSimpleToken(token.STAR_EQUAL)
+		} else {
+			s.addSimpleToken(token.STAR)
+		}
 	case '=':
 		if s.match('=') {
 			s.addSimpleToken(token.EQUAL_EQUAL)
@@ -163,7 +167,9 @@ func (s *Scanner) scanToken() {
 			if s.match('\n') {
 				s.Line++
 			}
-		} else { // Otherwise, we are dividing
+		} else if s.match('=') {
+			s.addSimpleToken(token.SLASH_EQUAL)
+		} else {
 			s.addSimpleToken(token.SLASH)
 		}
 	case ' ': // We are basically skipping these, no error, no op

@@ -99,6 +99,26 @@ func (i *Interpreter) VisitBinaryExpr(expr *types.BinaryExpr) (any, error) {
 		return l <= r, nil
 	case token.BANG_EQUAL:
 		return !i.isEqual(left, right), nil
+	case token.PLUS_EQUAL, token.MINUS_EQUAL, token.STAR_EQUAL, token.SLASH_EQUAL:
+		l, r, ok := utils.ConvFloat(left, right) // See if it is int
+		if !ok {
+			break 
+		}
+		var val any
+		switch expr.Operator.Type {
+		case token.PLUS_EQUAL:
+			val = l + r
+		case token.MINUS_EQUAL:
+			val = l - r
+		case token.STAR_EQUAL:
+			val = l * r
+		case token.SLASH_EQUAL:
+			val = l / r
+		}
+		if err := i.postfixAssign(expr.Left, val); err != nil { // Attempt to assign to var if one exists
+			return nil, err
+		}
+		return val, nil
 	case token.PLUS:
 		l, r, ok := utils.ConvFloat(left, right) // See if it is int
 		if ok {
@@ -109,6 +129,14 @@ func (i *Interpreter) VisitBinaryExpr(expr *types.BinaryExpr) (any, error) {
 	}
 
 	return utils.Parenthesize(i, expr.Operator.Lexeme, expr.Left, expr.Right)
+}
+
+func (i *Interpreter) postfixAssign(expr types.Expr, val any) error {
+	variable, ok := expr.(*types.VarExpr)
+	if ok {
+		return i.Environment.Assign(variable.Name, val)
+	}
+	return nil
 }
 
 func (i *Interpreter) VisitUnaryExpr(expr *types.UnaryExpr) (any, error) {

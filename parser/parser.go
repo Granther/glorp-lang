@@ -504,7 +504,7 @@ func (p *Parser) term() (types.Expr, error) {
 		return nil, err
 	}
 
-	for p.match(token.MINUS, token.PLUS) {
+	for p.match(token.MINUS, token.PLUS, token.PLUS_EQUAL, token.MINUS_EQUAL, token.STAR_EQUAL, token.SLASH_EQUAL) {
 		operator := p.previous()
 		right, err := p.factor()
 		if err != nil {
@@ -544,21 +544,20 @@ func (p *Parser) unary() (types.Expr, error) {
 		}
 		return types.NewUnaryExpr(operator, right), nil
 	}
-
 	return p.postfix()
 	// Must have reached highest level precedence
 }
 
 func (p *Parser) postfix() (types.Expr, error) {
-	if p.peekNext().Type == token.PLUS_PLUS || p.peekNext().Type == token.MINUS_MINUS { // Check if next tok is plus plus, parse left operand
+	switch p.peekNext().Type {
+	case token.PLUS_PLUS, token.MINUS_MINUS:
 		left, err := p.call()
 		if err != nil {
 			return nil, err
 		}
-		p.match(token.PLUS_PLUS, token.MINUS_MINUS) // Eat plusplus
+		p.match(token.PLUS_PLUS, token.MINUS_MINUS) // Eat plusplus // add glorperror
 		return types.NewPostfixExpr(left, p.previous()), nil
 	}
-
 	return p.call()
 }
 
@@ -704,9 +703,20 @@ func (p *Parser) match(tokenTypes ...token.TokenType) bool {
 			return true
 		}
 	}
-
 	return false
 }
+
+func (p *Parser) matchNext(tokenTypes ...token.TokenType) bool {
+	if p.isAtEnd() { return false }
+	for _, tokType := range tokenTypes {
+		if p.checkNext(tokType) {
+			p.advance()
+			return true
+		}
+	}
+	return false
+}
+
 
 // Only looks at tokens
 // Check if the next token is the passed type
@@ -715,6 +725,13 @@ func (p *Parser) check(tokType token.TokenType) bool {
 		return false
 	}
 	return p.peek().Type == tokType // Does the next token == the passed one?
+}
+
+func (p *Parser) checkNext(tokType token.TokenType) bool {
+	if p.isAtEnd() { // Because there is no next token
+		return false
+	}
+	return p.peekNext().Type == tokType
 }
 
 func (p *Parser) isAtEnd() bool {
