@@ -1,4 +1,5 @@
 
 
 glunc mlorp() {
+    print 9-=2
 }

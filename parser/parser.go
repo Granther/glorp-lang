@@ -555,7 +555,10 @@ func (p *Parser) postfix() (types.Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		p.match(token.PLUS_PLUS, token.MINUS_MINUS) // Eat plusplus // add glorperror
+		if !p.match(token.PLUS_PLUS, token.MINUS_MINUS) {
+			// glorpError.ParserError(p.peek(), )
+			return nil, nil
+		}
 		return types.NewPostfixExpr(left, p.previous()), nil
 	}
 	return p.call()
