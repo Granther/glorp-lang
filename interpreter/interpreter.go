@@ -392,6 +392,10 @@ func (i *Interpreter) VisitVarExpr(expr *types.VarExpr) (any, error) {
 	return i.Environment.Get(expr.Name.Lexeme)
 }
 
+// func (i *Interpreter) VisitGlistExpr(expr *types.GlistExpr) (any, error) {
+// 	return nil, nil
+// }
+
 func (i *Interpreter) VisitFunExpr(expr *types.FunExpr) (any, error) {
 	return i.Environment.Get(expr.Name.Lexeme)
 }

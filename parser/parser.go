@@ -567,7 +567,7 @@ func (p *Parser) postfix() (types.Expr, error) {
 func (p *Parser) call() (types.Expr, error) {
 	var expr types.Expr
 	var err error
-	if expr, err = p.primary(); err != nil {
+	if expr, err = p.glist(); err != nil {
 		return nil, err
 	}
 
@@ -607,13 +607,28 @@ func (p *Parser) finishCall(callee types.Expr) (types.Expr, error) {
 	}
 
 	paren, err := p.consume(token.RIGHT_PAREN, "Expect ')' after arguments.")
-	// fmt.Println(paren.Lexeme)
-	// os.Exit(1)
 	if err != nil {
 		return nil, err
 	}
 	// Finally perform func call
 	return types.NewCallExpr(callee, paren, args), nil
+}
+
+func (p *Parser) glist() (types.Expr, error) {
+	var data []types.Expr
+	if p.match(token.LEFT_BRACKET) {
+		for !p.match(token.RIGHT_BRACKET) && !p.isAtEnd() {
+			expr, err := p.expression()
+			if err != nil {
+				return nil, err
+			}
+			if !p.match(token.COMMA, token.RIGHT_BRACKET) { break }
+			data = append(data, expr)
+		}
+		fmt.Println(data)
+		return nil, nil	
+	}
+	return p.primary()
 }
 
 func (p *Parser) primary() (types.Expr, error) {

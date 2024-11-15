@@ -182,6 +182,8 @@ func (s *Scanner) scanToken() {
 		for s.match('\n') {
 			s.Line += 1
 		}
+	case '[':
+		s.glist()
 	case '"':
 		s.string()
 	default:
@@ -238,6 +240,20 @@ func (s *Scanner) peekNext() rune {
 		return '0'
 	}
 	return rune(s.Source[s.Current+1])
+}
+
+func (s *Scanner) glist() {
+	s.addSimpleToken(token.LEFT_BRACKET) 
+	for s.peek() != ']' && !s.isAtEnd() {
+		s.scanToken()
+	}
+
+	if s.isAtEnd() {
+		glorpError.ScannerError(s.Line, "Expected closing ']' to glist")
+		return
+	}
+
+	s.addSimpleToken(token.RIGHT_BRACKET)
 }
 
 func (s *Scanner) string() {

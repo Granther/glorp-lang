@@ -1,5 +1,3 @@
-
-
 glunc mlorp() {
-    print 9-=2
+    var x = ["hu", "huhuh", 1]
 }
