@@ -59,6 +59,10 @@ func (a *typesPrinter) VisitReturnExpr(expr *types.ReturnExpr) (any, error) {
 	return utils.Parenthesize(a, "return")
 }
 
+func (a *typesPrinter) VisitPostfixExpr(expr *types.PostfixExpr) (any, error) {
+	return utils.Parenthesize(a, "postfix")
+}
+
 func (a *typesPrinter) Print(expr types.Expr) string {
 	val, err := expr.Accept(a)
 	if err != nil {

@@ -550,17 +550,13 @@ func (p *Parser) unary() (types.Expr, error) {
 }
 
 func (p *Parser) postfix() (types.Expr, error) {
-	var expr types.Expr
 	if p.peekNext().Type == token.PLUS_PLUS || p.peekNext().Type == token.MINUS_MINUS { // Check if next tok is plus plus, parse left operand
-		if p.peek().Type == token.IDENTIFIER {
-			expr = 
-		}
 		left, err := p.call()
 		if err != nil {
 			return nil, err
 		}
 		p.match(token.PLUS_PLUS, token.MINUS_MINUS) // Eat plusplus
-		return types.NewPostfixExpr(types.NewLiteralExpr(literal.NewLiteral(left)), p.previous()), nil
+		return types.NewPostfixExpr(left, p.previous()), nil
 	}
 
 	return p.call()

@@ -131,20 +131,38 @@ func (i *Interpreter) VisitUnaryExpr(expr *types.UnaryExpr) (any, error) {
 }
 
 func (i *Interpreter) VisitPostfixExpr(expr *types.PostfixExpr) (any, error) {
-	fmt.Println("Encountered postfix")
-	// switch expr.Operator.Type {
-	// 	case token.PLUS_PLUS:
-	// 		val, ok := right.(float64)
-	// 		if ok {
-	// 			return val+1, nil
-	// 		}
-	// 	case token.MINUS_MINUS:
-	// 		val, ok := right.(float64)
-	// 		if ok {
-	// 			return val-1, nil
-	// 		}
-	// }
-	return nil, nil
+	var val float64
+	var ok bool
+
+	// Find actual value of value of expr to perform oper on (i in i++)
+	left, err := i.evaluate(expr.Val)
+	if err != nil {
+		return nil, err
+	}
+
+	// Do operation
+	switch expr.Operator.Type {
+	case token.PLUS_PLUS:
+		val, ok = left.(float64)
+		if ok {
+			val = val + 1
+		}
+	case token.MINUS_MINUS:
+		val, ok = left.(float64)
+		if ok {
+			val = val - 1
+		}
+	}
+
+	// If expr is a variable, reassign the variable
+	variable, ok := expr.Val.(*types.VarExpr)
+	if ok {
+		if err = i.Environment.Assign(variable.Name, val); err != nil {
+			return nil, err
+		}
+	}
+
+	return utils.Parenthesize(i, expr.Operator.Lexeme, expr.Val)
 }
 
 // Recursively looks through layered parens
