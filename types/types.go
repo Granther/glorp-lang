@@ -51,8 +51,10 @@ type Visitor interface {
 	VisitCallExpr(expr *CallExpr) (any, error)
 	VisitFunExpr(expr *FunExpr) (any, error)
 	VisitReturnExpr(expr *ReturnExpr) (any, error)
+	VisitPostfixExpr(expr *PostfixExpr) (any, error)
 }
 
 type Expr interface {
 	Accept(visitor Visitor) (any, error)
+	GetType() string
 }

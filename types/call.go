@@ -3,6 +3,7 @@ package types
 import "glorp/token"
 
 type CallExpr struct {
+	Type   string
 	Callee Expr
 	Paren  token.Token // Token for closing parens
 	Args   []Expr
@@ -10,6 +11,7 @@ type CallExpr struct {
 
 func NewCallExpr(callee Expr, paren token.Token, args []Expr) Expr {
 	return &CallExpr{
+		Type:   "CallExpr",
 		Callee: callee,
 		Paren:  paren,
 		Args:   args,
@@ -18,4 +20,8 @@ func NewCallExpr(callee Expr, paren token.Token, args []Expr) Expr {
 
 func (c *CallExpr) Accept(visitor Visitor) (any, error) {
 	return visitor.VisitCallExpr(c)
+}
+
+func (v *CallExpr) GetType() string {
+	return v.Type
 }

@@ -95,6 +95,7 @@ var TokenTypeNames = map[TokenType]string{
 	AND:           "AND",
 	CLASS:         "CLASS",
 	ELSE:          "ELSE",
+	TRUE:          "TRUE",
 	FALSE:         "FALSE",
 	GLUNC:         "GLUNC",
 	FOR:           "FOR",

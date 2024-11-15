@@ -125,19 +125,26 @@ func (i *Interpreter) VisitUnaryExpr(expr *types.UnaryExpr) (any, error) {
 		if ok {
 			return -val, nil
 		}
-	case token.PLUS_PLUS:
-		val, ok := right.(float64)
-		if ok {
-			return val+1, nil
-		}
-	case token.MINUS_MINUS:
-		val, ok := right.(float64)
-		if ok {
-			return val-1, nil
-		}
 	}
 
 	return utils.Parenthesize(i, expr.Operator.Lexeme, expr.Right)
+}
+
+func (i *Interpreter) VisitPostfixExpr(expr *types.PostfixExpr) (any, error) {
+	fmt.Println("Encountered postfix")
+	// switch expr.Operator.Type {
+	// 	case token.PLUS_PLUS:
+	// 		val, ok := right.(float64)
+	// 		if ok {
+	// 			return val+1, nil
+	// 		}
+	// 	case token.MINUS_MINUS:
+	// 		val, ok := right.(float64)
+	// 		if ok {
+	// 			return val-1, nil
+	// 		}
+	// }
+	return nil, nil
 }
 
 // Recursively looks through layered parens

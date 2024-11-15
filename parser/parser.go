@@ -126,24 +126,7 @@ func (p *Parser) funDeclaration(kind string) (types.Stmt, error) {
 		return nil, err
 	}
 
-	// g, ok := types.NewFun(name, params, body, p.Environment).(*types.Fun)
-	// if !ok {
-	// 	return nil, fmt.Errorf("unable to convert to type fun")
-	// }
-	// glunc := native.NewGlorpFunction(*g)
-	// p.Environment.Define(name.Lexeme, glunc)
-	// return g, nil
-
 	return types.NewFun(name, params, body, p.Environment), nil
-
-	// env := environment.NewEnvironment(p.Environment)
-	// g, ok := types.NewFun(name, params, body, env).(*types.Fun)
-	// if !ok {
-	// 	return nil, fmt.Errorf("unable to convert to type fun")
-	// }
-	// glunc := native.NewGlorpFunction(*g)
-	// env.Define(name.Lexeme, glunc)
-	// return g, nil
 }
 
 // The problem is that all functions are defined within the global scope
@@ -170,16 +153,8 @@ func (p *Parser) varDeclaration() (types.Stmt, error) {
 		return nil, err
 	}
 
-	// v, ok := types.NewVar(name, initializer).(*types.Var)
-	// if !ok {
-	// 	return nil, fmt.Errorf("unable to convert to type var")
-	// }
-	// p.Environment.Define(name.Lexeme, v)
-	// return v, nil
-
 	return types.NewVar(name, initializer), nil
 	// If = does not exist in decl, is empty decl, pass empty initial to var decl
-	// p.consume(token.END, "Expect 'end' after variable in declaration."
 }
 
 // Decide what kind of statement to branch to
@@ -529,11 +504,6 @@ func (p *Parser) term() (types.Expr, error) {
 		return nil, err
 	}
 
-	// if p.match(token.PLUS_PLUS) {
-	// 	fmt.Println("found plus plus")
-	// 	return types.NewBinaryExpr(expr, p.previous(), right), nil
-	// }
-
 	for p.match(token.MINUS, token.PLUS) {
 		operator := p.previous()
 		right, err := p.factor()
@@ -566,15 +536,6 @@ func (p *Parser) factor() (types.Expr, error) {
 }
 
 func (p *Parser) unary() (types.Expr, error) {
-	if p.peekNext().Type == token.PLUS_PLUS || p.peekNext().Type == token.MINUS_MINUS { // Check if next tok is plus plus, parse left operand
-		left, err := p.call()
-		if err != nil {
-			return nil, err
-		}
-		p.match(token.PLUS_PLUS, token.MINUS_MINUS) // Eat plusplus
-		return types.NewUnaryExpr(p.previous(), left), nil
-	}
-
 	if p.match(token.BANG, token.MINUS) { // If it is ! or -, must be unary
 		operator := p.previous()
 		right, err := p.unary() // Parse recursively, ie, !!
@@ -584,8 +545,25 @@ func (p *Parser) unary() (types.Expr, error) {
 		return types.NewUnaryExpr(operator, right), nil
 	}
 
-	return p.call()
+	return p.postfix()
 	// Must have reached highest level precedence
+}
+
+func (p *Parser) postfix() (types.Expr, error) {
+	var expr types.Expr
+	if p.peekNext().Type == token.PLUS_PLUS || p.peekNext().Type == token.MINUS_MINUS { // Check if next tok is plus plus, parse left operand
+		if p.peek().Type == token.IDENTIFIER {
+			expr = 
+		}
+		left, err := p.call()
+		if err != nil {
+			return nil, err
+		}
+		p.match(token.PLUS_PLUS, token.MINUS_MINUS) // Eat plusplus
+		return types.NewPostfixExpr(types.NewLiteralExpr(literal.NewLiteral(left)), p.previous()), nil
+	}
+
+	return p.call()
 }
 
 func (p *Parser) call() (types.Expr, error) {

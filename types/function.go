@@ -3,6 +3,7 @@ package types
 import "glorp/token"
 
 type FunExpr struct {
+	Type   string
 	Params []token.Token
 	Name   token.Token
 	Body   []Stmt
@@ -10,12 +11,17 @@ type FunExpr struct {
 
 func NewFunExpr(name token.Token, params []token.Token, body []Stmt) Expr {
 	return &FunExpr{
+		Type:   "FunExpr",
 		Params: params,
-		Name: name,
-		Body: body,
+		Name:   name,
+		Body:   body,
 	}
 }
 
 func (f *FunExpr) Accept(visitor Visitor) (any, error) {
 	return visitor.VisitFunExpr(f)
+}
+
+func (v *FunExpr) GetType() string {
+	return v.Type
 }
