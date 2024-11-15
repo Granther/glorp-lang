@@ -494,8 +494,10 @@ func (p *Parser) equality() (types.Expr, error) {
 
 	for p.match(token.BANG_EQUAL, token.EQUAL_EQUAL) {
 		operator := p.previous()
-
-		right, _ := p.comparison()
+		right, err := p.comparison()
+		if err != nil {
+			return nil, err
+		}
 		expr = types.NewBinaryExpr(expr, operator, right)
 	}
 
@@ -511,7 +513,10 @@ func (p *Parser) comparison() (types.Expr, error) {
 	// While we are currently in a token that is composed of 2 of these
 	for p.match(token.GREATER, token.GREATER_EQUAL, token.LESS, token.LESS_EQUAL) {
 		operator := p.previous()
-		right, _ := p.term()
+		right, err := p.term()
+		if err != nil {
+			return nil, err
+		}
 		expr = types.NewBinaryExpr(expr, operator, right)
 	}
 
@@ -524,12 +529,18 @@ func (p *Parser) term() (types.Expr, error) {
 		return nil, err
 	}
 
+	// if p.match(token.PLUS_PLUS) {
+	// 	fmt.Println("found plus plus")
+	// 	return types.NewBinaryExpr(expr, p.previous(), right), nil
+	// }
+
 	for p.match(token.MINUS, token.PLUS) {
 		operator := p.previous()
 		right, err := p.factor()
 		if err != nil {
 			return nil, err
 		}
+
 		expr = types.NewBinaryExpr(expr, operator, right)
 	}
 
@@ -555,6 +566,15 @@ func (p *Parser) factor() (types.Expr, error) {
 }
 
 func (p *Parser) unary() (types.Expr, error) {
+	if p.peekNext().Type == token.PLUS_PLUS || p.peekNext().Type == token.MINUS_MINUS { // Check if next tok is plus plus, parse left operand
+		left, err := p.call()
+		if err != nil {
+			return nil, err
+		}
+		p.match(token.PLUS_PLUS, token.MINUS_MINUS) // Eat plusplus
+		return types.NewUnaryExpr(p.previous(), left), nil
+	}
+
 	if p.match(token.BANG, token.MINUS) { // If it is ! or -, must be unary
 		operator := p.previous()
 		right, err := p.unary() // Parse recursively, ie, !!
@@ -729,6 +749,13 @@ func (p *Parser) isAtEnd() bool {
 
 func (p *Parser) peek() token.Token { // Returns current token we have yet to consume
 	return p.Tokens[p.Current]
+}
+
+func (p *Parser) peekNext() token.Token { // Returns current token we have yet to consume
+	if p.isAtEnd() {
+		return token.Token{}
+	}
+	return p.Tokens[p.Current+1]
 }
 
 func (p *Parser) previous() token.Token {

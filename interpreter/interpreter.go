@@ -99,17 +99,8 @@ func (i *Interpreter) VisitBinaryExpr(expr *types.BinaryExpr) (any, error) {
 		return l <= r, nil
 	case token.BANG_EQUAL:
 		return !i.isEqual(left, right), nil
-	case token.EQUAL_EQUAL:
-		return i.isEqual(left, right), nil
 	case token.PLUS:
 		l, r, ok := utils.ConvFloat(left, right) // See if it is int
-		if ok {
-			return l + r, nil
-		} else if reflect.TypeOf(left).Kind().String() == "string" && reflect.TypeOf(right).Kind().String() == "string" {
-			return fmt.Sprintf("%v", left) + fmt.Sprintf("%v", right), nil // If they are both strings then concat
-		}
-	case token.PLUS_EQUAL:
-		l, r, ok := utils.ConvFloat(left, right) 
 		if ok {
 			return l + r, nil
 		} else if reflect.TypeOf(left).Kind().String() == "string" && reflect.TypeOf(right).Kind().String() == "string" {
@@ -130,9 +121,19 @@ func (i *Interpreter) VisitUnaryExpr(expr *types.UnaryExpr) (any, error) {
 	case token.BANG:
 		return !i.isTruthy(right), nil // If the expression on the right is
 	case token.MINUS:
-		val, ok := right.(int)
+		val, ok := right.(float64)
 		if ok {
 			return -val, nil
+		}
+	case token.PLUS_PLUS:
+		val, ok := right.(float64)
+		if ok {
+			return val+1, nil
+		}
+	case token.MINUS_MINUS:
+		val, ok := right.(float64)
+		if ok {
+			return val-1, nil
 		}
 	}
 
@@ -303,14 +304,13 @@ func (i *Interpreter) VisitTryStmt(stmt *types.Try) error {
 	return err
 }
 
-
 func (i *Interpreter) ExecuteBlock(stmts []types.Stmt, environment types.Environment) error {
 	prev := i.Environment // Save old, for setting back later
 
 	// Change to new block and execute from that env
 	i.Environment = environment
 	for _, stmt := range stmts {
-		// If a stmt is wert, 
+		// If a stmt is wert,
 		err := i.execute(stmt)
 		if err != nil {
 			return err
@@ -416,12 +416,12 @@ func checkNumberOperands(operator token.Token, left any, right any) (float64, fl
 
 func (i *Interpreter) Interpret(stmts []types.Stmt) {
 	for _, stmt := range stmts {
-	    switch stmt.(type) {
-	    case *types.Var:
-	        i.execute(stmt)
-	    case *types.Fun:
-	        i.execute(stmt)
-	    }
+		switch stmt.(type) {
+		case *types.Var:
+			i.execute(stmt)
+		case *types.Fun:
+			i.execute(stmt)
+		}
 	}
 
 	g, err := i.Environment.Get("mlorp")
@@ -478,43 +478,43 @@ func (i *Interpreter) GetHadRuntimeError() bool {
 
 // OLD
 
-	// x := types.NewCallExpr(f, token.RIGHT_PAREN, []types.Expr{})
-	// x.Accept(i)
-	// function := native.NewGlorpFunction(x)
-	// function.Call(i, []any{})
+// x := types.NewCallExpr(f, token.RIGHT_PAREN, []types.Expr{})
+// x.Accept(i)
+// function := native.NewGlorpFunction(x)
+// function.Call(i, []any{})
 
-	// i.execute(g.(types.Stmt))
-	// glorpFunc, ok := g.(native.Callable)
-	// if !ok {
-	// 	glorpError.InterpreterRuntimeError(token.Token{}, "unable to convert mlorp to statement.")
-	// 	return
-	// }
+// i.execute(g.(types.Stmt))
+// glorpFunc, ok := g.(native.Callable)
+// if !ok {
+// 	glorpError.InterpreterRuntimeError(token.Token{}, "unable to convert mlorp to statement.")
+// 	return
+// }
 
-	// for _, stmt := range stmts {
-	// 	if i.execute(stmt) != nil {
-	// 		fmt.Println("Error in interpret")
-	// 		i.HadRuntimeError = true
-	// 		return
-	// 	}
-	// }
-	// if i.execute(glorpFunc) != nil {
-	// 	fmt.Println("Error in interpret")
-	// 	i.HadRuntimeError = true
-	// 	return
-	// }
-	// glorpFunc.Call(i, []any{})
+// for _, stmt := range stmts {
+// 	if i.execute(stmt) != nil {
+// 		fmt.Println("Error in interpret")
+// 		i.HadRuntimeError = true
+// 		return
+// 	}
+// }
+// if i.execute(glorpFunc) != nil {
+// 	fmt.Println("Error in interpret")
+// 	i.HadRuntimeError = true
+// 	return
+// }
+// glorpFunc.Call(i, []any{})
 
-	// for _, stmt := range stmts {
-	// 	if i.execute(stmt) != nil {
-	// 		fmt.Println("Error in interpret")
-	// 		i.HadRuntimeError = true
-	// 		return
-	// 	}
-	// }
+// for _, stmt := range stmts {
+// 	if i.execute(stmt) != nil {
+// 		fmt.Println("Error in interpret")
+// 		i.HadRuntimeError = true
+// 		return
+// 	}
+// }
 
-	// Second pass: execute normal statements
-	// for _, stmt := range stmts {
-	//     if _, ok := stmt.(*types.Var); !ok {
-	//         i.execute(stmt)
-	//     }
-	// }
+// Second pass: execute normal statements
+// for _, stmt := range stmts {
+//     if _, ok := stmt.(*types.Var); !ok {
+//         i.execute(stmt)
+//     }
+// }

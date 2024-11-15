@@ -1,15 +1,6 @@
 
 
 glunc mlorp() {
-    var x = false
-    var t = 1
-    t += 10
-    t = t + 10
-    print t
-}
-
-glunc test() {
-    print "before"
-    wert "test errir"
-    print "after"
+    var x = true
+    print x--
 }
