@@ -78,7 +78,7 @@ func (g *Glorp) Run(source string) error {
 	}
 
 	for _, tok := range tokens {
-		fmt.Printf("%s\n", token.TokenTypeNames[tok.Type])
+		fmt.Printf("%s %s\n", token.TokenTypeNames[tok.Type], tok.Lexeme)
 	}
 
 	statements := g.Parser.Parse(tokens)

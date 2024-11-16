@@ -243,9 +243,13 @@ func (s *Scanner) peekNext() rune {
 }
 
 func (s *Scanner) glist() {
-	s.addSimpleToken(token.LEFT_BRACKET) 
+	s.addSimpleToken(token.LEFT_BRACKET)
 	for s.peek() != ']' && !s.isAtEnd() {
-		s.scanToken()
+		c := s.advance()
+		if c == '"' {
+			// fmt.Println("got quote")
+			s.string()
+		}
 	}
 
 	if s.isAtEnd() {
@@ -254,6 +258,10 @@ func (s *Scanner) glist() {
 	}
 
 	s.addSimpleToken(token.RIGHT_BRACKET)
+
+	// val := s.Source[s.Start+1 : s.Current-1]
+	// lit := literal.NewLiteral(val)
+	// s.addToken(token.STRING, lit)
 }
 
 func (s *Scanner) string() {

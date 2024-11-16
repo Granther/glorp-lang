@@ -616,18 +616,30 @@ func (p *Parser) finishCall(callee types.Expr) (types.Expr, error) {
 
 func (p *Parser) glist() (types.Expr, error) {
 	var data []types.Expr
+	fmt.Println("right bef cond ", p.peek().Lexeme)
 	if p.match(token.LEFT_BRACKET) {
+		fmt.Println("right after cond ", p.peek().Lexeme)
 		for !p.match(token.RIGHT_BRACKET) && !p.isAtEnd() {
+			fmt.Println("her")
+			fmt.Println(p.peek().Lexeme)
 			expr, err := p.expression()
 			if err != nil {
 				return nil, err
 			}
-			if !p.match(token.COMMA, token.RIGHT_BRACKET) { break }
+			// if p.match(token.END) { fmt.Println("hereqqee") }
+			if !p.match(token.COMMA, token.RIGHT_BRACKET) {
+				break
+			}
 			data = append(data, expr)
 		}
 		fmt.Println(data)
-		return nil, nil	
+		// _, err := p.consume(token.END, "Expect 'end' after closing backet of glist.")
+		// if err != nil {
+		// 	return nil, err
+		// }
+		return types.NewGlistExpr(data), nil
 	}
+	fmt.Println("aft")
 	return p.primary()
 }
 
@@ -666,6 +678,7 @@ func (p *Parser) primary() (types.Expr, error) {
 	}
 
 	// If we have gotten here, the token given cannot start an expression
+	fmt.Println(p.peek().Lexeme)
 	glorpError.ParserError(p.peek(), "Expect expression.")
 	return nil, nil
 }
@@ -725,7 +738,9 @@ func (p *Parser) match(tokenTypes ...token.TokenType) bool {
 }
 
 func (p *Parser) matchNext(tokenTypes ...token.TokenType) bool {
-	if p.isAtEnd() { return false }
+	if p.isAtEnd() {
+		return false
+	}
 	for _, tokType := range tokenTypes {
 		if p.checkNext(tokType) {
 			p.advance()
@@ -734,7 +749,6 @@ func (p *Parser) matchNext(tokenTypes ...token.TokenType) bool {
 	}
 	return false
 }
-
 
 // Only looks at tokens
 // Check if the next token is the passed type

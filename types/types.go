@@ -52,7 +52,7 @@ type Visitor interface {
 	VisitFunExpr(expr *FunExpr) (any, error)
 	VisitReturnExpr(expr *ReturnExpr) (any, error)
 	VisitPostfixExpr(expr *PostfixExpr) (any, error)
-	// VisitGlistExpr(expr *GlistExpr) (any, error)
+	VisitGlistExpr(expr *GlistExpr) (any, error)
 }
 
 type Expr interface {
