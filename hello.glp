@@ -1,5 +1,6 @@
 glunc mlorp() {
     var x = ["90", 10, true, 2+3]
+    print [10, 1][0]
     var t = 5
     var u = x[0]
     print u

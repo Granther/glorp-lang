@@ -390,12 +390,10 @@ func (i *Interpreter) VisitAssignExpr(expr *types.AssignExpr) (any, error) {
 }
 
 func (i *Interpreter) VisitVarExpr(expr *types.VarExpr) (any, error) {
-	fmt.Println("in var expr")
 	return i.Environment.Get(expr.Name.Lexeme)
 }
 
 func (i *Interpreter) VisitGlistExpr(expr *types.GlistExpr) (any, error) {
-	fmt.Println("Visit glist")
 	return expr.Data, nil
 }
 
@@ -405,21 +403,35 @@ func (i *Interpreter) VisitIndexExpr(expr *types.IndexExpr) (any, error) {
 	case *types.GlistExpr:
 		fmt.Println("looking at glist")
 	case *types.VarExpr:
-		v, ok := expr.Expr.(*types.VarExpr)
-		if ok {
-			fmt.Println(v.Name.Lexeme)
-			t, err := i.Environment.Get(v.Name.Lexeme)
-			// fmt.Println(t[expr.Index])
-			if err != nil {
-				return nil, err
-			}
-		tt, ok1 := t.([]types.Expr)
-			if ok1 {
-				return tt[0], nil
-			}
-		}
+		return i.indexVarExpr(expr.Expr, expr.Index)
 	}
 	return nil, nil
+}
+
+func (i *Interpreter) indexVarExpr(expr types.Expr, index types.Expr) (any, error) {
+	var ok bool
+
+	idx, ok := index.(*types.LiteralExpr)
+	if ok {
+		idxLit, ok := (*idx).(*literal.Literal)
+		if ok {
+			fmt.Println((idxLit.Val))
+		}
+	}
+
+	variable, ok := expr.(*types.VarExpr) // Collapse to variable expr
+	if ok {
+		fmt.Println(variable.Name.Lexeme)
+		varVal, err := i.Environment.Get(variable.Name.Lexeme) // Get var val from env
+		if err != nil {
+			return nil, err
+		}
+		
+		tt, ok1 := varVal.([]types.Expr) // Turn into slice of exprs
+		if ok1 {
+			return tt[0], nil
+		}
+	}
 }
 
 func (i *Interpreter) VisitFunExpr(expr *types.FunExpr) (any, error) {
