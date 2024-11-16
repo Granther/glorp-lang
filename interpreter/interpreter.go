@@ -380,12 +380,14 @@ func (i *Interpreter) ExecuteBlock(stmts []types.Stmt, environment types.Environ
 }
 
 func (i *Interpreter) VisitAssignExpr(expr *types.AssignExpr) (any, error) {
-	fmt.Println("assignin var ", expr.Name.Lexeme)
 	val, err := i.evaluate(expr.Val)
 	if err != nil {
 		return nil, err
 	}
-	i.Environment.Assign(expr.Name, val)
+	err = i.Environment.Assign(expr.Name, val)
+	if err != nil {
+		return nil, err
+	}
 	return val, nil
 }
 
@@ -437,15 +439,18 @@ func (i *Interpreter) indexVarExpr(expr types.Expr, index types.Expr) (any, erro
 
 	variable, ok := expr.(*types.VarExpr) // Collapse to variable expr
 	if ok {
-		// fmt.Println(variable.Name.Lexeme)
 		varVal, err := i.Environment.Get(variable.Name.Lexeme) // Get var val from env
 		if err != nil {
 			return nil, err
 		}
 
-		tt, ok1 := varVal.([]types.Expr) // Turn into slice of exprs
-		if ok1 {
-			return tt[int(idx)], nil
+		exprList, ok := varVal.([]types.Expr) // Turn into slice of exprs
+		if ok {
+			indexedVal := exprList[int(idx)]
+			v, ok := indexedVal.(*types.LiteralExpr)
+			if ok {
+				return v.Val.Val, nil
+			} 
 		}
 	}
 	return nil, fmt.Errorf("unable to index variable expression")

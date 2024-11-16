@@ -18,6 +18,10 @@ func (l *LiteralExpr) Accept(visitor Visitor) (any, error) {
 	return visitor.VisitLiteralExpr(l)
 }
 
+func (l *LiteralExpr) GetRawVal() any {
+	return l.Val.Val
+}
+
 func (v *LiteralExpr) GetType() string {
 	return v.Type
 }
