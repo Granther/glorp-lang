@@ -616,7 +616,21 @@ func (p *Parser) finishCall(callee types.Expr) (types.Expr, error) {
 
 func (p *Parser) glist() (types.Expr, error) {
 	var data []types.Expr
+
+	expr, err := p.primary()
+	if err != nil {
+		return nil, err
+	}
+
 	if p.match(token.LEFT_BRACKET) {
+		if expr != nil { // If not nil then we are looking at x[idx]
+			idx, err := p.expression()
+			if err != nil {
+				return nil, err
+			}
+			return types.NewIndexExpr(expr, idx), nil
+		}
+		fmt.Println("got here")
 		for !p.match(token.RIGHT_BRACKET) && !p.isAtEnd() {
 			if p.check(token.END) { break }
 			expr, err := p.expression()
@@ -631,8 +645,17 @@ func (p *Parser) glist() (types.Expr, error) {
 		fmt.Println(data)
 		return types.NewGlistExpr(data), nil
 	}
-	return p.primary()
+	return expr, nil
 }
+
+// func (p *Parser) indexGlist(expr types.Expr, idx types.Expr) (types.Expr, error) {
+// 	i, ok := idx.(types.)
+
+// 	val, ok := expr.(*types.GlistExpr)
+// 	if ok {
+// 		return val.Data[idx]
+// 	}
+// }
 
 func (p *Parser) primary() (types.Expr, error) {
 	if p.match(token.FALSE) {

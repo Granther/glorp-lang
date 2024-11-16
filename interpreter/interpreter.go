@@ -395,7 +395,11 @@ func (i *Interpreter) VisitVarExpr(expr *types.VarExpr) (any, error) {
 
 func (i *Interpreter) VisitGlistExpr(expr *types.GlistExpr) (any, error) {
 	fmt.Println("Visit glist")
-	
+	return nil, nil
+}
+
+func (i *Interpreter) VisitIndexExpr(expr *types.IndexExpr) (any, error) {
+	fmt.Println("Visit idx expr")
 	return nil, nil
 }
 

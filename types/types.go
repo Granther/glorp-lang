@@ -53,6 +53,7 @@ type Visitor interface {
 	VisitReturnExpr(expr *ReturnExpr) (any, error)
 	VisitPostfixExpr(expr *PostfixExpr) (any, error)
 	VisitGlistExpr(expr *GlistExpr) (any, error)
+	VisitIndexExpr(expr *IndexExpr) (any, error)
 }
 
 type Expr interface {
