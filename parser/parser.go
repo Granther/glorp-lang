@@ -146,6 +146,7 @@ func (p *Parser) varDeclaration() (types.Stmt, error) {
 		if err != nil {
 			return nil, err
 		}
+		fmt.Println(initializer.GetType())
 	}
 
 	_, err = p.consume(token.END, "Expect 'end' after var decl/init.")
@@ -617,22 +618,12 @@ func (p *Parser) finishCall(callee types.Expr) (types.Expr, error) {
 func (p *Parser) glist() (types.Expr, error) {
 	var data []types.Expr
 
-	expr, err := p.primary()
-	if err != nil {
-		return nil, err
-	}
-
 	if p.match(token.LEFT_BRACKET) {
-		if expr != nil { // If not nil then we are looking at x[idx]
-			idx, err := p.expression()
-			if err != nil {
-				return nil, err
-			}
-			return types.NewIndexExpr(expr, idx), nil
-		}
-		fmt.Println("got here")
 		for !p.match(token.RIGHT_BRACKET) && !p.isAtEnd() {
-			if p.check(token.END) { break }
+			// fmt.Println("IN second", p.peek().Lexeme)
+			if p.check(token.END) {
+				break
+			}
 			expr, err := p.expression()
 			if err != nil {
 				return nil, err
@@ -645,7 +636,57 @@ func (p *Parser) glist() (types.Expr, error) {
 		fmt.Println(data)
 		return types.NewGlistExpr(data), nil
 	}
+
+	expr, err := p.primary()
+	if err != nil {
+		return nil, err
+	}
+
+	// fmt.Println(expr != nil, p.previous().Type == token.IDENTIFIER, p.previous().Lexeme)
+	if expr != nil && p.previous().Type == token.IDENTIFIER && p.match(token.LEFT_BRACKET) {
+		idx, err := p.expression()
+		if err != nil {
+			return nil, err
+		}
+		if p.match(token.RIGHT_BRACKET) {
+			// fmt.Println("found right")
+		}
+		fmt.Println(expr.GetType())
+		return types.NewIndexExpr(expr, idx), nil
+	}
+
 	return expr, nil
+
+	// // If expr ==
+
+	// if expr, ok := expr.(*types.GlistExpr); ok {
+	// // if expr != nil { // If not nil then we are looking at x[idx]
+	// 	fmt.Println(expr.GetType())
+	// 	idx, err := p.expression()
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	if p.match(token.RIGHT_BRACKET) {
+	// 		fmt.Println("found right")
+	// 	}
+	// 	return types.NewIndexExpr(expr, idx), nil
+	// }
+	// for !p.match(token.RIGHT_BRACKET) && !p.isAtEnd() {
+	// 	// fmt.Println("IN second", p.peek().Lexeme)
+	// 	if p.check(token.END) {
+	// 		break
+	// 	}
+	// 	expr, err := p.expression()
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	if !p.match(token.COMMA, token.RIGHT_BRACKET) {
+	// 		break
+	// 	}
+	// 	data = append(data, expr)
+	// }
+	// fmt.Println(data)
+	// return types.NewGlistExpr(data), nil
 }
 
 // func (p *Parser) indexGlist(expr types.Expr, idx types.Expr) (types.Expr, error) {

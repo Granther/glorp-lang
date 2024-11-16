@@ -380,6 +380,7 @@ func (i *Interpreter) ExecuteBlock(stmts []types.Stmt, environment types.Environ
 }
 
 func (i *Interpreter) VisitAssignExpr(expr *types.AssignExpr) (any, error) {
+	fmt.Println("assignin var ", expr.Name.Lexeme)
 	val, err := i.evaluate(expr.Val)
 	if err != nil {
 		return nil, err
@@ -395,11 +396,29 @@ func (i *Interpreter) VisitVarExpr(expr *types.VarExpr) (any, error) {
 
 func (i *Interpreter) VisitGlistExpr(expr *types.GlistExpr) (any, error) {
 	fmt.Println("Visit glist")
-	return nil, nil
+	return expr.Data, nil
 }
 
 func (i *Interpreter) VisitIndexExpr(expr *types.IndexExpr) (any, error) {
 	fmt.Println("Visit idx expr")
+	switch expr.Expr.(type) {
+	case *types.GlistExpr:
+		fmt.Println("looking at glist")
+	case *types.VarExpr:
+		v, ok := expr.Expr.(*types.VarExpr)
+		if ok {
+			fmt.Println(v.Name.Lexeme)
+			t, err := i.Environment.Get(v.Name.Lexeme)
+			// fmt.Println(t[expr.Index])
+			if err != nil {
+				return nil, err
+			}
+		tt, ok1 := t.([]types.Expr)
+			if ok1 {
+				return tt[0], nil
+			}
+		}
+	}
 	return nil, nil
 }
 
