@@ -401,7 +401,7 @@ func (i *Interpreter) VisitGlistExpr(expr *types.GlistExpr) (any, error) {
 
 func (i *Interpreter) VisitIndexExpr(expr *types.IndexExpr) (any, error) {
 	switch expr.Expr.(type) {
-	case *types.GlistExpr:
+	case *types.GlistExpr, *types.LiteralExpr:
 		fmt.Println("looking at glist")
 	case *types.VarExpr:
 		return i.indexVarExpr(expr.Expr, expr.Index)

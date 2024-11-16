@@ -4,6 +4,8 @@ glunc mlorp() {
     // x[1] = 200
     // print x[1]
 
+    [9, 1, 0][0]
+
     var p = ["hello", 2, false, 4]
     for var i = 0; i <= 3; i++ {
         if p[i] {
