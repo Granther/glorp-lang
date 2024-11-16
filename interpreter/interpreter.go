@@ -102,7 +102,7 @@ func (i *Interpreter) VisitBinaryExpr(expr *types.BinaryExpr) (any, error) {
 	case token.PLUS_EQUAL, token.MINUS_EQUAL, token.STAR_EQUAL, token.SLASH_EQUAL:
 		l, r, ok := utils.ConvFloat(left, right) // See if it is int
 		if !ok {
-			break 
+			break
 		}
 		var val any
 		switch expr.Operator.Type {
@@ -398,7 +398,6 @@ func (i *Interpreter) VisitGlistExpr(expr *types.GlistExpr) (any, error) {
 }
 
 func (i *Interpreter) VisitIndexExpr(expr *types.IndexExpr) (any, error) {
-	fmt.Println("Visit idx expr")
 	switch expr.Expr.(type) {
 	case *types.GlistExpr:
 		fmt.Println("looking at glist")
@@ -410,28 +409,46 @@ func (i *Interpreter) VisitIndexExpr(expr *types.IndexExpr) (any, error) {
 
 func (i *Interpreter) indexVarExpr(expr types.Expr, index types.Expr) (any, error) {
 	var ok bool
+	var idx float64
 
-	idx, ok := index.(*types.LiteralExpr)
-	if ok {
-		idxLit, ok := (*idx).(*literal.Literal)
+	switch index.(type) {
+	case *types.VarExpr:
+		variable, ok := index.(*types.VarExpr)
+		if !ok {
+			fmt.Println("not good got var in indexexpr")
+		}
+		val, err := i.Environment.Get(variable.Name.Lexeme)
+		if err != nil {
+			return nil, err
+		}
+		idx, ok = val.(float64)
+		if !ok {
+			fmt.Println("cannot conv var to float")
+		}
+	case *types.LiteralExpr:
+		idxLit, ok := index.(*types.LiteralExpr)
 		if ok {
-			fmt.Println((idxLit.Val))
+			idx, ok = idxLit.Val.Val.(float64)
+			if !ok {
+				fmt.Println("cannot conv")
+			}
 		}
 	}
 
 	variable, ok := expr.(*types.VarExpr) // Collapse to variable expr
 	if ok {
-		fmt.Println(variable.Name.Lexeme)
+		// fmt.Println(variable.Name.Lexeme)
 		varVal, err := i.Environment.Get(variable.Name.Lexeme) // Get var val from env
 		if err != nil {
 			return nil, err
 		}
-		
+
 		tt, ok1 := varVal.([]types.Expr) // Turn into slice of exprs
 		if ok1 {
-			return tt[0], nil
+			return tt[int(idx)], nil
 		}
 	}
+	return nil, fmt.Errorf("unable to index variable expression")
 }
 
 func (i *Interpreter) VisitFunExpr(expr *types.FunExpr) (any, error) {
