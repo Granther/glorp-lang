@@ -183,7 +183,10 @@ func (s *Scanner) scanToken() {
 			s.Line += 1
 		}
 	case '[':
-		s.glist()
+		// s.glist()
+		s.addSimpleToken(token.LEFT_BRACKET)
+	case ']':
+		s.addSimpleToken(token.RIGHT_BRACKET)
 	case '"':
 		s.string()
 	default:
@@ -240,28 +243,6 @@ func (s *Scanner) peekNext() rune {
 		return '0'
 	}
 	return rune(s.Source[s.Current+1])
-}
-
-func (s *Scanner) glist() {
-	s.addSimpleToken(token.LEFT_BRACKET)
-	for s.peek() != ']' && !s.isAtEnd() {
-		c := s.advance()
-		if c == '"' {
-			// fmt.Println("got quote")
-			s.string()
-		}
-	}
-
-	if s.isAtEnd() {
-		glorpError.ScannerError(s.Line, "Expected closing ']' to glist")
-		return
-	}
-
-	s.addSimpleToken(token.RIGHT_BRACKET)
-
-	// val := s.Source[s.Start+1 : s.Current-1]
-	// lit := literal.NewLiteral(val)
-	// s.addToken(token.STRING, lit)
 }
 
 func (s *Scanner) string() {

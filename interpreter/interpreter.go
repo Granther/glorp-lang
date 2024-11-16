@@ -380,7 +380,6 @@ func (i *Interpreter) ExecuteBlock(stmts []types.Stmt, environment types.Environ
 }
 
 func (i *Interpreter) VisitAssignExpr(expr *types.AssignExpr) (any, error) {
-	fmt.Println("in assign")
 	val, err := i.evaluate(expr.Val)
 	if err != nil {
 		return nil, err
@@ -396,6 +395,7 @@ func (i *Interpreter) VisitVarExpr(expr *types.VarExpr) (any, error) {
 
 func (i *Interpreter) VisitGlistExpr(expr *types.GlistExpr) (any, error) {
 	fmt.Println("Visit glist")
+	
 	return nil, nil
 }
 
