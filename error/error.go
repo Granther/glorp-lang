@@ -17,6 +17,10 @@ func InterpreterRuntimeError(errToken token.Token, message string) {
 	Report(errToken.Line, fmt.Sprintf(" at '%s'", errToken.Lexeme), message, "interpreter")
 }
 
+func InterpreterSimpleRuntimeError(errToken token.Token, message string) {
+	Report(errToken.Line, fmt.Sprintf(" at '%s'", errToken.Lexeme), message, "interpreter")
+}
+
 func ScannerError(line int, message string) {
 	Report(line, "", message, "scanner")
 }

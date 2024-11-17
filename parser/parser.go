@@ -623,7 +623,6 @@ func (p *Parser) glist() (types.Expr, error) {
 	}
 
 	if expr != nil && p.match(token.LEFT_BRACKET) { // If is non nil expr and leftbracket lies after, could only be index
-		fmt.Println("I think we are indexing: ", expr.GetType())
 		idx, err := p.expression()
 		if err != nil {
 			return nil, err
@@ -631,6 +630,8 @@ func (p *Parser) glist() (types.Expr, error) {
 		p.match(token.RIGHT_BRACKET)
 		return types.NewIndexExpr(expr, idx), nil
 	}
+
+	return expr, nil
 
 	// if expr == nil && p.match(token.LEFT_BRACKET) { // Expr is nil, we are looking at a glist literal
 	// 	fmt.Println("i think we are glisting")
@@ -650,8 +651,6 @@ func (p *Parser) glist() (types.Expr, error) {
 	// 	fmt.Println("created new glist")
 	// 	return types.NewGlistExpr(data), nil
 	// }
-
-	return expr, nil
 
 	// only look for preceding expression (on left) if we have indexing on right
 	// expr, err := p.primary()
@@ -721,11 +720,14 @@ func (p *Parser) primary() (types.Expr, error) {
 			}
 			data = append(data, expr)
 			if !p.match(token.COMMA) {
+				_, err := p.consume(token.RIGHT_BRACKET, "Expect ']' at the end of glist.")
+				if err != nil {
+					return nil, err
+				}
 				break
 			}
 		}
 		if p.check(token.RIGHT_BRACKET) { p.match(token.RIGHT_BRACKET) }
-		fmt.Println("created new glist: ", data)
 		return types.NewGlistExpr(data), nil
 	}
 

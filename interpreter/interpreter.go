@@ -400,42 +400,57 @@ func (i *Interpreter) VisitGlistExpr(expr *types.GlistExpr) (any, error) {
 }
 
 func (i *Interpreter) VisitIndexExpr(expr *types.IndexExpr) (any, error) {
+	indexVal, err := i.evaluateIndex(expr.Index)
+	if err != nil {
+		return nil, err
+	}
+
 	switch expr.Expr.(type) {
-	case *types.GlistExpr, *types.LiteralExpr:
-		fmt.Println("looking at glist")
+	case *types.LiteralExpr:
+		return i.indexLiteral(expr.Expr, indexVal)
+	case *types.GlistExpr:
+		return i.indexGlist(expr.Expr, indexVal)
 	case *types.VarExpr:
-		return i.indexVarExpr(expr.Expr, expr.Index)
+		return i.indexVar(expr.Expr, indexVal)
 	}
 	return nil, nil
 }
 
-func (i *Interpreter) indexVarExpr(expr types.Expr, index types.Expr) (any, error) {
-	var ok bool
-	var idx float64
-
+func (i *Interpreter) evaluateIndex(index types.Expr) (any, error) {
 	switch index.(type) {
 	case *types.VarExpr:
 		variable, ok := index.(*types.VarExpr)
 		if !ok {
 			fmt.Println("not good got var in indexexpr")
+			return nil, nil
 		}
 		val, err := i.Environment.Get(variable.Name.Lexeme)
 		if err != nil {
 			return nil, err
 		}
-		idx, ok = val.(float64)
-		if !ok {
-			fmt.Println("cannot conv var to float")
-		}
+		return val, nil
 	case *types.LiteralExpr:
 		idxLit, ok := index.(*types.LiteralExpr)
 		if ok {
-			idx, ok = idxLit.Val.Val.(float64)
-			if !ok {
-				fmt.Println("cannot conv")
-			}
+			return idxLit.GetRawVal(), nil
 		}
 	}
+	return nil, nil
+}
+
+func (i *Interpreter) indexGlist(expr types.Expr, index any) (any, error) {
+	if idx, ok := index.(int); ok {
+		glist := expr.(*types.GlistExpr)
+		if idx > len(glist.Data)-1 {
+			return nil, fmt.Errorf("index out of bounds")
+		}
+		return glist.Data[idx], nil
+	}
+	return nil, nil
+}
+
+func (i *Interpreter) indexVar(expr types.Expr, index any) (any, error) {
+	var ok bool
 
 	variable, ok := expr.(*types.VarExpr) // Collapse to variable expr
 	if ok {
@@ -446,14 +461,39 @@ func (i *Interpreter) indexVarExpr(expr types.Expr, index types.Expr) (any, erro
 
 		exprList, ok := varVal.([]types.Expr) // Turn into slice of exprs
 		if ok {
-			indexedVal := exprList[int(idx)]
+			indexedVal := exprList[0]
 			v, ok := indexedVal.(*types.LiteralExpr)
 			if ok {
 				return v.Val.Val, nil
-			} 
+			}
 		}
 	}
 	return nil, fmt.Errorf("unable to index variable expression")
+}
+
+func (i *Interpreter) indexLiteral(expr types.Expr, index any) (any, error) {
+	var str string
+	var ok bool
+
+	val := expr.(*types.LiteralExpr)
+	str, ok = val.GetRawVal().(string)
+	if !ok {
+		return nil, fmt.Errorf("literal is not iterable")
+	}
+
+	switch index.(type) {
+	case int:
+		return str[index.(int)], nil
+	case string:
+		findChar := index.(string)
+		for i, r := range str {
+			if string(r) == findChar {
+				return i, nil
+			}
+		}
+		return nil, fmt.Errorf("char not in string")
+	}
+	return nil, nil
 }
 
 func (i *Interpreter) VisitFunExpr(expr *types.FunExpr) (any, error) {
