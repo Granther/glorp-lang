@@ -615,41 +615,49 @@ func (p *Parser) finishCall(callee types.Expr) (types.Expr, error) {
 }
 
 func (p *Parser) glist() (types.Expr, error) {
-	var data []types.Expr
+	// var data []types.Expr
 
-	if p.match(token.LEFT_BRACKET) {
-		for !p.match(token.RIGHT_BRACKET) && !p.isAtEnd() {
-			// fmt.Println("IN second", p.peek().Lexeme)
-			if p.check(token.END) {
-				break
-			}
-			expr, err := p.expression()
-			if err != nil {
-				return nil, err
-			}
-			if !p.match(token.COMMA, token.RIGHT_BRACKET) {
-				break
-			}
-			data = append(data, expr)
-		}
-		return types.NewGlistExpr(data), nil
-	}
+	// if p.match(token.LEFT_BRACKET) {
+	// 	for !p.match(token.RIGHT_BRACKET) && !p.isAtEnd() {
+	// 		if p.check(token.END) {
+	// 			break
+	// 		}
+	// 		expr, err := p.expression() // Cant make it to primary
+	// 		if err != nil {
+	// 			return nil, err
+	// 		}
+	// 		if !p.match(token.COMMA, token.RIGHT_BRACKET) {
+	// 			break
+	// 		}
+	// 		data = append(data, expr)
+	// 	}
+	// 	fmt.Println("created new glist")
+	// 	return types.NewGlistExpr(data), nil
+	// }
 
-	expr, err := p.primary()
-	if err != nil {
-		return nil, err
-	}
+	// only look for preceding expression (on left) if we have indexing on right
+	// expr, err := p.primary()
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	if expr != nil && p.previous().Type == token.IDENTIFIER && p.match(token.LEFT_BRACKET) {
-		idx, err := p.expression()
-		if err != nil {
-			return nil, err
-		}
-		p.match(token.RIGHT_BRACKET)
-		return types.NewIndexExpr(expr, idx), nil
-	}
+	return p.primary()
 
-	return expr, nil
+	// if expr != nil {
+	// 	fmt.Println("In glist proc type: ", expr.GetType(), p.peek().Lexeme)
+	// }
+
+	// // How do I know when the
+	// if expr != nil && p.previous().Type == token.IDENTIFIER && p.match(token.LEFT_BRACKET) {
+	// 	//	if expr != nil && p.match(token.LEFT_BRACKET) {
+	// 	fmt.Println("in index expr")
+	// 	idx, err := p.expression()
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	p.match(token.RIGHT_BRACKET)
+	// 	return types.NewIndexExpr(expr, idx), nil
+	// }
 }
 
 func (p *Parser) primary() (types.Expr, error) {
@@ -684,6 +692,28 @@ func (p *Parser) primary() (types.Expr, error) {
 			return nil, err
 		}
 		return types.NewGroupingExpr(expr), nil
+	}
+
+	// If we see an ident
+	if p.match(token.LEFT_BRACKET) { // needs to be contained, 
+		fmt.Println("found left brack")
+		var data []types.Expr
+
+		for !p.match(token.RIGHT_BRACKET) && !p.isAtEnd() {
+			if p.check(token.END) {
+				break
+			}
+			expr, err := p.expression() // Cant make it to primary
+			if err != nil {
+				return nil, err
+			}
+			if !p.match(token.COMMA, token.RIGHT_BRACKET) {
+				break
+			}
+			data = append(data, expr)
+		}
+		fmt.Println("created new glist")
+		return types.NewGlistExpr(data), nil
 	}
 
 	// If we have gotten here, the token given cannot start an expression
@@ -773,6 +803,9 @@ func (p *Parser) checkNext(tokType token.TokenType) bool {
 	}
 	return p.peekNext().Type == tokType
 }
+
+// func (p *Parser)
+// If I look ahead till I see a bracket, what if I see x + y[0] when looking at x, we technically would see
 
 func (p *Parser) isAtEnd() bool {
 	return p.peek().Type == token.EOF
