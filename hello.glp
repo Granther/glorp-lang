@@ -1,15 +1,4 @@
 glunc mlorp() {
-    // var x = ["90", 10, true, 2+3]
-    // var u = x[2]
-    // x[1] = 200
-    // print x[1]
-
-    var x = [1, 2][0]
-
-    // var p = ["hello", 2, false, 4]
-    // for var i = 0; i <= 3; i++ {
-    //     if p[i] {
-    //         print "is true"
-    //     }
-    // }
+    "string"[0]
 }
+

@@ -617,7 +617,23 @@ func (p *Parser) finishCall(callee types.Expr) (types.Expr, error) {
 func (p *Parser) glist() (types.Expr, error) {
 	// var data []types.Expr
 
-	// if p.match(token.LEFT_BRACKET) {
+	expr, err := p.primary()
+	if err != nil {
+		return nil, err
+	}
+
+	if expr != nil && p.match(token.LEFT_BRACKET) { // If is non nil expr and leftbracket lies after, could only be index
+		fmt.Println("I think we are indexing: ", expr.GetType())
+		idx, err := p.expression()
+		if err != nil {
+			return nil, err
+		}
+		p.match(token.RIGHT_BRACKET)
+		return types.NewIndexExpr(expr, idx), nil
+	}
+
+	// if expr == nil && p.match(token.LEFT_BRACKET) { // Expr is nil, we are looking at a glist literal
+	// 	fmt.Println("i think we are glisting")
 	// 	for !p.match(token.RIGHT_BRACKET) && !p.isAtEnd() {
 	// 		if p.check(token.END) {
 	// 			break
@@ -635,13 +651,13 @@ func (p *Parser) glist() (types.Expr, error) {
 	// 	return types.NewGlistExpr(data), nil
 	// }
 
+	return expr, nil
+
 	// only look for preceding expression (on left) if we have indexing on right
 	// expr, err := p.primary()
 	// if err != nil {
 	// 	return nil, err
 	// }
-
-	return p.primary()
 
 	// if expr != nil {
 	// 	fmt.Println("In glist proc type: ", expr.GetType(), p.peek().Lexeme)
@@ -694,25 +710,22 @@ func (p *Parser) primary() (types.Expr, error) {
 		return types.NewGroupingExpr(expr), nil
 	}
 
-	// If we see an ident
-	if p.match(token.LEFT_BRACKET) { // needs to be contained, 
-		fmt.Println("found left brack")
+	// It has to be in a func that sees if left bracket lies after an expression
+	if p.match(token.LEFT_BRACKET) { // Expr is nil, we are looking at a glist literal
 		var data []types.Expr
-
+		fmt.Println("i think we are glisting")
 		for !p.match(token.RIGHT_BRACKET) && !p.isAtEnd() {
-			if p.check(token.END) {
-				break
-			}
-			expr, err := p.expression() // Cant make it to primary
+			expr, err := p.expression() 
 			if err != nil {
 				return nil, err
 			}
-			if !p.match(token.COMMA, token.RIGHT_BRACKET) {
+			data = append(data, expr)
+			if !p.match(token.COMMA) {
 				break
 			}
-			data = append(data, expr)
 		}
-		fmt.Println("created new glist")
+		if p.check(token.RIGHT_BRACKET) { p.match(token.RIGHT_BRACKET) }
+		fmt.Println("created new glist: ", data)
 		return types.NewGlistExpr(data), nil
 	}
 
