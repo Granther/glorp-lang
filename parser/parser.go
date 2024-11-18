@@ -567,7 +567,7 @@ func (p *Parser) postfix() (types.Expr, error) {
 func (p *Parser) call() (types.Expr, error) {
 	var expr types.Expr
 	var err error
-	if expr, err = p.glist(); err != nil {
+	if expr, err = p.index(); err != nil {
 		return nil, err
 	}
 
@@ -614,9 +614,7 @@ func (p *Parser) finishCall(callee types.Expr) (types.Expr, error) {
 	return types.NewCallExpr(callee, paren, args), nil
 }
 
-func (p *Parser) glist() (types.Expr, error) {
-	// var data []types.Expr
-
+func (p *Parser) index() (types.Expr, error) {
 	expr, err := p.primary()
 	if err != nil {
 		return nil, err
@@ -627,52 +625,11 @@ func (p *Parser) glist() (types.Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		p.match(token.RIGHT_BRACKET)
+		_, err = p.consume(token.RIGHT_BRACKET, "Expect ']' to end indexing expression.")
+		if err != nil { return nil, err }
 		return types.NewIndexExpr(expr, idx), nil
 	}
-
 	return expr, nil
-
-	// if expr == nil && p.match(token.LEFT_BRACKET) { // Expr is nil, we are looking at a glist literal
-	// 	fmt.Println("i think we are glisting")
-	// 	for !p.match(token.RIGHT_BRACKET) && !p.isAtEnd() {
-	// 		if p.check(token.END) {
-	// 			break
-	// 		}
-	// 		expr, err := p.expression() // Cant make it to primary
-	// 		if err != nil {
-	// 			return nil, err
-	// 		}
-	// 		if !p.match(token.COMMA, token.RIGHT_BRACKET) {
-	// 			break
-	// 		}
-	// 		data = append(data, expr)
-	// 	}
-	// 	fmt.Println("created new glist")
-	// 	return types.NewGlistExpr(data), nil
-	// }
-
-	// only look for preceding expression (on left) if we have indexing on right
-	// expr, err := p.primary()
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// if expr != nil {
-	// 	fmt.Println("In glist proc type: ", expr.GetType(), p.peek().Lexeme)
-	// }
-
-	// // How do I know when the
-	// if expr != nil && p.previous().Type == token.IDENTIFIER && p.match(token.LEFT_BRACKET) {
-	// 	//	if expr != nil && p.match(token.LEFT_BRACKET) {
-	// 	fmt.Println("in index expr")
-	// 	idx, err := p.expression()
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	p.match(token.RIGHT_BRACKET)
-	// 	return types.NewIndexExpr(expr, idx), nil
-	// }
 }
 
 func (p *Parser) primary() (types.Expr, error) {
@@ -710,9 +667,9 @@ func (p *Parser) primary() (types.Expr, error) {
 	}
 
 	// It has to be in a func that sees if left bracket lies after an expression
-	if p.match(token.LEFT_BRACKET) { // Expr is nil, we are looking at a glist literal
+	if p.match(token.LEFT_BRACKET) { 
+		literalToken := p.previous()
 		var data []types.Expr
-		fmt.Println("i think we are glisting")
 		for !p.match(token.RIGHT_BRACKET) && !p.isAtEnd() {
 			expr, err := p.expression() 
 			if err != nil {
@@ -721,14 +678,11 @@ func (p *Parser) primary() (types.Expr, error) {
 			data = append(data, expr)
 			if !p.match(token.COMMA) {
 				_, err := p.consume(token.RIGHT_BRACKET, "Expect ']' at the end of glist.")
-				if err != nil {
-					return nil, err
-				}
+				if err != nil { return nil, err }
 				break
 			}
 		}
-		if p.check(token.RIGHT_BRACKET) { p.match(token.RIGHT_BRACKET) }
-		return types.NewGlistExpr(data), nil
+		return types.NewGlistExpr(data, literalToken), nil
 	}
 
 	// If we have gotten here, the token given cannot start an expression
@@ -751,11 +705,6 @@ func (p *Parser) consume(tokType token.TokenType, message string) (token.Token, 
 // Hopefully all tokens that would have been affected by an earlier error are discorded
 func (p *Parser) syncronize() {
 	p.advance() // Consume a token
-
-	// for !p.isAtEnd() && p.peek().Type != token.RIGHT_BRACE {
-	// 	p.advance()
-	// 	//fmt.Println(p.peek().Lexeme)
-	// }
 
 	for !p.isAtEnd() {
 		if p.previous().Type == token.END {
@@ -819,9 +768,6 @@ func (p *Parser) checkNext(tokType token.TokenType) bool {
 	return p.peekNext().Type == tokType
 }
 
-// func (p *Parser)
-// If I look ahead till I see a bracket, what if I see x + y[0] when looking at x, we technically would see
-
 func (p *Parser) isAtEnd() bool {
 	return p.peek().Type == token.EOF
 }
@@ -851,6 +797,3 @@ func (p *Parser) advance() token.Token { // Returns token that is consumed, s.Cu
 func (p *Parser) GetHadError() bool {
 	return p.HadError
 }
-
-// Got or to work
-// Need to get level or precedence explained

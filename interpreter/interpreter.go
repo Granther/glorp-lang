@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"glorp/environment"
 	glorpError "glorp/error"
+	"glorp/glorpups"
 	"glorp/literal"
 	"glorp/native"
 	"glorp/token"
@@ -273,7 +274,10 @@ func (i *Interpreter) VisitWertStmt(stmt *types.Wert) error {
 }
 
 func (i *Interpreter) VisitPrintStmt(stmt *types.Print) error {
-	val, _ := i.evaluate(stmt.Expr)
+	val, err := i.evaluate(stmt.Expr)
+	if err != nil {
+		return err
+	}
 	fmt.Println(utils.Stringify(val))
 	return nil
 }
@@ -348,11 +352,16 @@ func (i *Interpreter) VisitTryStmt(stmt *types.Try) error {
 	switch err.(type) {
 	case *glorpError.ReturnErr:
 		return err
-	case *glorpError.WertErr:
+	case glorpups.Glorpup:
 		wertVal, _ := err.(*glorpError.WertErr)
 		newVar := types.NewVar(stmt.WoopsTok, types.NewLiteralExpr(literal.NewLiteral(wertVal)))
 		block := types.NewBlock([]types.Stmt{newVar, stmt.Woops})
 		err = i.execute(block)
+	// case *glorpError.WertErr:
+	// 	wertVal, _ := err.(*glorpError.WertErr)
+	// 	newVar := types.NewVar(stmt.WoopsTok, types.NewLiteralExpr(literal.NewLiteral(wertVal)))
+	// 	block := types.NewBlock([]types.Stmt{newVar, stmt.Woops})
+	// 	err = i.execute(block)
 	}
 	return err
 }
@@ -439,14 +448,15 @@ func (i *Interpreter) evaluateIndex(index types.Expr) (any, error) {
 }
 
 func (i *Interpreter) indexGlist(expr types.Expr, index any) (any, error) {
-	if idx, ok := index.(int); ok {
+	if float, ok := index.(float64); ok {
+		idx := int(float)
 		glist := expr.(*types.GlistExpr)
 		if idx > len(glist.Data)-1 {
-			return nil, fmt.Errorf("index out of bounds")
+			return nil, glorpups.NewIndexBoundsGlorpup(glist.GetToken(), "Index out of bounds", nil)
 		}
 		return glist.Data[idx], nil
 	}
-	return nil, nil
+	return nil, glorpups.NewIndexBoundsGlorpup(token.Token{}, "Incorrect type for indexing Glist.", nil)
 }
 
 func (i *Interpreter) indexVar(expr types.Expr, index any) (any, error) {
@@ -524,11 +534,12 @@ func (i *Interpreter) VisitLogicalExpr(expr *types.LogicalExpr) (any, error) {
 	return i.evaluate(expr.Right)
 }
 
-func (i *Interpreter) Print(expr types.Expr) string {
+func (i *Interpreter) Print(expr types.Expr) (string, error) {
 	val, err := expr.Accept(i)
 	if err != nil {
+		return "", err
 	}
-	return fmt.Sprintf("%v", val)
+	return fmt.Sprintf("%v", val), nil
 }
 
 // Calls the visit method for whatever dtype it is
@@ -595,7 +606,7 @@ func (i *Interpreter) Interpret(stmts []types.Stmt) {
 
 	_, err = f.Call(i, []any{})
 	if err != nil {
-		glorpError.InterpreterRuntimeError(token.Token{}, "uncaught wert arrived in global scope")
+		glorpups.InterpreterRuntimeError("uncaught wert arrived in global scope", err)
 		return
 	}
 }

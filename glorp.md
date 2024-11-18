@@ -18,3 +18,8 @@
 ### Array
 - How do we know when we are looking at an array
 - An array is a dtype, declares like a var
+
+### Error infra
+- Should have umbrella of glorpups
+- Top most RuntimeGlorpup
+- IndexBoundsGlorpup

@@ -1,15 +1,17 @@
 package types
 
+import "glorp/token"
+
 type GlistExpr struct {
 	Type string
-	// Name token.Token
+	Token token.Token
 	Data []Expr
 }
 
-func NewGlistExpr(data []Expr) Expr {
+func NewGlistExpr(data []Expr, token token.Token) Expr {
 	return &GlistExpr{
 		Type: "GlistExpr",
-		// Name: name,
+		Token: token,
 		Data: data,
 	}
 }
@@ -20,4 +22,8 @@ func (v *GlistExpr) Accept(visitor Visitor) (any, error) {
 
 func (v *GlistExpr) GetType() string {
 	return v.Type
+}
+
+func (v *GlistExpr) GetToken() token.Token {
+	return v.Token
 }

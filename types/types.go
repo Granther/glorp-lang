@@ -39,7 +39,7 @@ type StmtVisitor interface {
 }
 
 type Visitor interface {
-	Print(expr Expr) string
+	Print(expr Expr) (string, error)
 	VisitBinaryExpr(expr *BinaryExpr) (any, error)
 	VisitLiteralExpr(expr *LiteralExpr) (any, error)
 	VisitUnaryExpr(expr *UnaryExpr) (any, error)

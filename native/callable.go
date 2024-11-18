@@ -38,10 +38,11 @@ func (f *GlorpFunction) Call(interpreter types.Interpreter, args []any) (any, er
 	if ok {
 		return ret.Val, nil
 	}
-	_, ok = err.(*glorpError.WertErr) // If it is a wert, allow it up 
-	if ok {
-		return nil, err
-	}
+
+	// _, ok = err.(*glorpError.WertErr) // If it is a wert, allow it up 
+	// if ok {
+	// 	return nil, err
+	// }
 	return nil, err
 }
 

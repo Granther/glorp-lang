@@ -1,5 +1,8 @@
 glunc mlorp() {
-    var t = [1, 2, 3]
-    print t[1]
+    try {
+        print [10, 9][true]
+    } woops t {
+        print "caught"
+    }
 }
 
