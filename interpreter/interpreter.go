@@ -454,10 +454,12 @@ func (i *Interpreter) indexGlist(expr types.Expr, index any) (any, error) {
 		if idx > len(glist.Data)-1 {
 			return nil, glorpups.NewIndexBoundsGlorpup(glist.GetToken(), "Index out of bounds", nil)
 		}
-		return glist.Data[idx], nil
+		return i.evaluate(glist.Data[idx])
 	}
 	return nil, glorpups.NewIndexBoundsGlorpup(token.Token{}, "Incorrect type for indexing Glist.", nil)
 }
+
+// func (i *Interpreter) indexVar(expr types.Expr, index any) (any, error)
 
 func (i *Interpreter) indexVar(expr types.Expr, index any) (any, error) {
 	var ok bool

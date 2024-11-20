@@ -1,7 +1,8 @@
 glunc mlorp() {
     try {
-        print [10, 9][true]
+        print [10, 9]["he"]
     } woops t {
+        print strert t
         print "caught"
     }
 }
