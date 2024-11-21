@@ -1,9 +1,31 @@
 glunc mlorp() {
     try {
-        print [10, 9]["he"]
-    } woops t {
-        print strert t
+        print [10, 1][11]
+    } IndexBoundsGlorpup woops t {
+        print t
         print "caught"
-    }
+    } RuntimeGlorpup woops t {
+        print t.str()
+        wert t
+    } 
 }
 
+glype int int
+
+// common.glp
+type g = gluct { val: glint } 
+var x =
+x.getVal = glunc(x) int { return x.val }
+expose x
+
+// main.glp
+using x from common
+
+glunc main() {
+    print x.getVal()
+    x.printVal = glunc() { print x.getVal }
+    x.printVal()
+
+    var s = everything x
+
+}

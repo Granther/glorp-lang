@@ -459,8 +459,6 @@ func (i *Interpreter) indexGlist(expr types.Expr, index any) (any, error) {
 	return nil, glorpups.NewIndexBoundsGlorpup(token.Token{}, "Incorrect type for indexing Glist.", nil)
 }
 
-// func (i *Interpreter) indexVar(expr types.Expr, index any) (any, error)
-
 func (i *Interpreter) indexVar(expr types.Expr, index any) (any, error) {
 	var ok bool
 
@@ -473,7 +471,7 @@ func (i *Interpreter) indexVar(expr types.Expr, index any) (any, error) {
 
 		exprList, ok := varVal.([]types.Expr) // Turn into slice of exprs
 		if ok {
-			indexedVal := exprList[0]
+			indexedVal := exprList[int(index.(float64))]
 			v, ok := indexedVal.(*types.LiteralExpr)
 			if ok {
 				return v.Val.Val, nil
