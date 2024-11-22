@@ -36,6 +36,7 @@ type StmtVisitor interface {
 	VisitReturnStmt(stmt *Return) error
 	VisitWertStmt(stmt *Wert) error
 	VisitTryStmt(stmt *Try) error
+	VisitClassStmt(stmt *Class) error
 }
 
 type Visitor interface {

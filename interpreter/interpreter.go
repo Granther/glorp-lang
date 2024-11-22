@@ -347,6 +347,10 @@ func (i *Interpreter) VisitIfStmt(stmt *types.If) error {
 	return nil
 }
 
+func (i *Interpreter) VisitClassStmt(stmt *types.Class) error {
+	return nil
+}
+
 func (i *Interpreter) VisitTryStmt(stmt *types.Try) error {
 	err := i.execute(stmt.Attempt)
 	switch err.(type) {

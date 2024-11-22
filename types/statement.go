@@ -49,14 +49,26 @@ type Return struct {
 }
 
 type Try struct {
-	Attempt   Stmt
+	Attempt  Stmt
 	Woops    Stmt
 	WoopsTok token.Token
 }
 
+type Class struct {
+	Name    token.Token
+	Methods []Stmt
+}
+
+func NewClass(name token.Token, methods []Stmt) Stmt {
+	return &Class{
+		Name:    name,
+		Methods: methods,
+	}
+}
+
 func NewTry(attempt Stmt, woops Stmt, woopsTok token.Token) Stmt {
 	return &Try{
-		Attempt:   attempt,
+		Attempt:  attempt,
 		Woops:    woops,
 		WoopsTok: woopsTok,
 	}
@@ -162,4 +174,8 @@ func (e *Wert) Accept(visitor StmtVisitor) error {
 
 func (e *Try) Accept(visitor StmtVisitor) error {
 	return visitor.VisitTryStmt(e)
+}
+
+func (e *Class) Accept(visitor StmtVisitor) error {
+	return visitor.VisitClassStmt(e)
 }

@@ -75,9 +75,36 @@ func (p *Parser) declaration() (types.Stmt, error) {
 	if p.match(token.GLUNC) {
 		return p.funDeclaration("function")
 	}
+	if p.match(token.CLASS) {
+		return p.classDeclaration()
+	}
 	// If not, fallback to standard stmt
 	return p.statement()
 }
+
+func (p *Parser) classDeclaration() (types.Stmt, error) {
+	name, err := p.consume(token.IDENTIFIER, "Expect a valid name following 'class'.")
+	if err != nil {
+		return nil, err
+	}
+	_, err = p.consume(token.LEFT_BRACE, "Expect '{' after class name.")
+	if err != nil {
+		return nil, err
+	}
+	// p.match(token.END)
+	var methods []types.Stmt
+	for !p.match(token.RIGHT_BRACE) {
+		method, err := p.funDeclaration("method")
+		if err != nil {
+			return nil, err
+		}
+		methods = append(methods, method)
+	}
+
+	return types.NewClass(name, methods), nil
+}
+
+// A class is a list of func decls with a name, a named list of func decls!
 
 func (p *Parser) funDeclaration(kind string) (types.Stmt, error) {
 	name, err := p.consume(token.IDENTIFIER, fmt.Sprintf("Expect %s name.", kind))
