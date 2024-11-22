@@ -27,5 +27,6 @@ glunc main() {
     x.printVal()
 
     var s = everything x
-
 }
+
+type 
