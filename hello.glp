@@ -1,5 +1,7 @@
-class dog 
-{
+class dog {
+    bark() {
+        print "bark"
+    }
 }
 
 

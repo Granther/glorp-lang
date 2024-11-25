@@ -91,15 +91,18 @@ func (p *Parser) classDeclaration() (types.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	// p.match(token.END)
+
 	var methods []types.Stmt
 	for !p.match(token.RIGHT_BRACE) {
+		if p.match(token.END) { continue }
 		method, err := p.funDeclaration("method")
 		if err != nil {
 			return nil, err
 		}
 		methods = append(methods, method)
 	}
+
+	fmt.Print(methods)
 
 	return types.NewClass(name, methods), nil
 }
